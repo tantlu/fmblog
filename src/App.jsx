@@ -95,7 +95,8 @@ import {
   Phone
 } from 'lucide-react';
 
-// --- Firebase Setup (CHÍNH CHỦ) ---
+// --- 1. CONFIGURATION & UTILS ---
+
 const firebaseConfig = {
   apiKey: "AIzaSyC1Egcu7ByRCb3ruOdRufTmxPq2rnBebEU",
   authDomain: "fmpro-c5f67.firebaseapp.com",
@@ -107,11 +108,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app); 
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- Utilities ---
 const ADMIN_EMAIL = 'nguyentan7799@gmail.com';
 
 const COLLECTIONS = {
@@ -128,7 +127,6 @@ const CATEGORIES = {
   TIPS: 'Chiến Thuật & Tips'
 };
 
-// --- MOCK DATA ---
 const MOCK_ARTICLES = [
   {
     id: 'mock-1',
@@ -163,13 +161,11 @@ const MOCK_PRODUCTS = [
 
 const getCollRef = (colName) => collection(db, colName);
 
-// Cập nhật hàm lấy tên hiển thị: Ưu tiên displayName, không dùng email nữa
 const getUserDisplayName = (user) => {
   if (!user) return 'Khách';
-  // Nếu có tên hiển thị thì dùng, nếu không thì dùng mặc định "Thành viên" hoặc "Admin" nếu là email admin
   if (user.displayName) return user.displayName;
-  if (user.email === ADMIN_EMAIL) return 'Admin';
-  return 'Thành viên FM';
+  if (user.email) return user.email.split('@')[0];
+  return 'Bạn đọc';
 };
 
 const formatDateSafe = (timestamp) => {
@@ -194,158 +190,167 @@ const getFriendlyErrorMessage = (errorCode) => {
   }
 };
 
-// --- COMPONENTS ---
+// --- 2. COMPONENTS (Using Function Declarations for Hoisting) ---
 
-const DemoModeAlert = () => (
-  <div className="fixed bottom-4 right-4 z-[200] w-[90%] max-w-sm md:w-auto bg-white/90 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in slide-in-from-bottom-5 mx-auto md:mx-0">
-    <div className="bg-amber-100 p-2 rounded-full shrink-0">
-      <WifiOff size={18} className="text-amber-600" />
-    </div>
-    <div>
-      <h4 className="font-bold text-sm">Chế độ Demo (Offline)</h4>
-      <p className="text-xs opacity-80">Không kết nối được Firebase. Dữ liệu là mẫu.</p>
-    </div>
-  </div>
-);
-
-const ContactPage = () => (
-  <div className="max-w-4xl mx-auto py-16 px-4 animate-in fade-in duration-500">
-    <div className="text-center mb-12">
-      <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Về Chúng Tôi</h2>
-      <div className="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
-    </div>
-
-    <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
-      <div className="md:w-1/2 p-8 md:p-12 bg-slate-50 flex flex-col justify-center">
-        <h3 className="text-2xl font-serif font-bold text-slate-800 mb-4">Chúng tôi là ai?</h3>
-        <p className="text-slate-600 leading-relaxed mb-6">
-          FM PRO BLOG là điểm đến tin cậy cho cộng đồng Football Manager tại Việt Nam. Chúng tôi cung cấp các giải pháp chơi game bản quyền giá rẻ, chia sẻ kiến thức, chiến thuật và các bản mod chất lượng cao.
-        </p>
-        <p className="text-slate-600 leading-relaxed">
-          Với đội ngũ admin nhiệt huyết và giàu kinh nghiệm, chúng tôi cam kết mang lại trải nghiệm tốt nhất cho các HLV online.
-        </p>
+function DemoModeAlert() {
+  return (
+    <div className="fixed bottom-4 right-4 z-[200] w-[90%] max-w-sm md:w-auto bg-white/90 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in slide-in-from-bottom-5 mx-auto md:mx-0">
+      <div className="bg-amber-100 p-2 rounded-full shrink-0">
+        <WifiOff size={18} className="text-amber-600" />
       </div>
-      <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center bg-gradient-to-br from-slate-900 to-slate-800 text-white text-center">
-        <div className="bg-white/10 p-4 rounded-full mb-6">
-          <Mail size={32} className="text-amber-400" />
+      <div>
+        <h4 className="font-bold text-sm">Chế độ Demo (Offline)</h4>
+        <p className="text-xs opacity-80">Không kết nối được Firebase. Dữ liệu là mẫu.</p>
+      </div>
+    </div>
+  );
+}
+
+function ContactPage() {
+  return (
+    <div className="max-w-4xl mx-auto py-16 px-4 animate-in fade-in duration-500">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Về Chúng Tôi</h2>
+        <div className="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+        <div className="md:w-1/2 p-8 md:p-12 bg-slate-50 flex flex-col justify-center">
+          <h3 className="text-2xl font-serif font-bold text-slate-800 mb-4">Chúng tôi là ai?</h3>
+          <p className="text-slate-600 leading-relaxed mb-6">
+            FM PRO BLOG là điểm đến tin cậy cho cộng đồng Football Manager tại Việt Nam. Chúng tôi cung cấp các giải pháp chơi game bản quyền giá rẻ, chia sẻ kiến thức, chiến thuật và các bản mod chất lượng cao.
+          </p>
+          <p className="text-slate-600 leading-relaxed">
+            Với đội ngũ admin nhiệt huyết và giàu kinh nghiệm, chúng tôi cam kết mang lại trải nghiệm tốt nhất cho các HLV online.
+          </p>
         </div>
-        <h3 className="text-2xl font-bold mb-2">Liên Hệ Hỗ Trợ</h3>
-        <p className="text-slate-400 mb-8 text-sm">Gặp vấn đề? Inbox ngay cho Admin.</p>
+        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center bg-gradient-to-br from-slate-900 to-slate-800 text-white text-center">
+          <div className="bg-white/10 p-4 rounded-full mb-6">
+            <Mail size={32} className="text-amber-400" />
+          </div>
+          <h3 className="text-2xl font-bold mb-2">Liên Hệ Hỗ Trợ</h3>
+          <p className="text-slate-400 mb-8 text-sm">Gặp vấn đề? Inbox ngay cho Admin.</p>
 
-        <a
-          href="https://www.facebook.com/tanlan.2001"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-900/50"
-        >
-          <Facebook size={20} /> Chat qua Facebook
-        </a>
+          <a
+            href="https://www.facebook.com/tanlan.2001"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-900/50"
+          >
+            <Facebook size={20} /> Chat qua Facebook
+          </a>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+}
 
-const ProductGuide = ({ onBack }) => (
-  <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
-    <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
-      <div className="bg-gradient-to-r from-amber-500 to-yellow-600 p-8 text-white text-center">
-        <div className="flex justify-center mb-4">
-          <div className="bg-white/20 p-4 rounded-full">
-            <ShieldAlert size={48} className="text-white" />
+function ProductGuide({ onBack }) {
+  return (
+    <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
+      <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
+        <div className="bg-gradient-to-r from-amber-500 to-yellow-600 p-8 text-white text-center">
+          <div className="flex justify-center mb-4">
+            <div className="bg-white/20 p-4 rounded-full">
+              <ShieldAlert size={48} className="text-white" />
+            </div>
           </div>
+          <h1 className="text-2xl md:text-3xl font-bold font-serif uppercase tracking-wider mb-2">Lưu Ý Quan Trọng & Hướng Dẫn Sử Dụng</h1>
+          <p className="opacity-90 text-sm md:text-base">Để đảm bảo quyền lợi và trải nghiệm, bạn vui lòng ĐỌC KỸ các thông tin sau</p>
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold font-serif uppercase tracking-wider mb-2">Lưu Ý Quan Trọng & Hướng Dẫn Sử Dụng</h1>
-        <p className="opacity-90 text-sm md:text-base">Để đảm bảo quyền lợi và trải nghiệm, bạn vui lòng ĐỌC KỸ các thông tin sau</p>
-      </div>
 
-      <div className="p-6 md:p-10 space-y-8 text-slate-700">
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
-            Về gói Share
-          </h3>
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4 text-blue-800 font-medium">
-            👉 Khi thanh toán xong, hãy nhắn tin cho <strong>ADMIN</strong> bằng cách chat trong web hoặc liên hệ FB ở mục "Liên hệ".
-          </div>
-          <ul className="list-disc pl-5 space-y-2 text-sm md:text-base leading-relaxed">
-            <li>Bạn sẽ nhận được một <strong>Tài khoản Steam có sẵn Football Manager 2026 PC</strong>.</li>
-            <li>Đây là hình thức <strong>Share Steam Offline</strong> (chơi ở chế độ ngoại tuyến).</li>
-            <li>File save game được lưu riêng trên máy tính của bạn, hoàn toàn bảo mật.</li>
-            <li className="text-red-600 font-bold bg-red-50 p-2 rounded-lg">Tuyệt đối không thay đổi email hay mật khẩu của tài khoản được cấp.</li>
-            <li className="italic text-slate-500">Lưu ý: Gói này không hỗ trợ chơi tại tiệm nét hoặc qua các dịch vụ Cloud PC.</li>
-          </ul>
-        </section>
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
-            Sau khi đã cài đặt xong
-          </h3>
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm md:text-base">
-            <p className="flex items-start gap-2"><AlertTriangle className="text-amber-500 shrink-0 mt-1" size={18} /> <strong>KHÔNG nhấn "Go Online"</strong> hoặc thay đổi nick khác trên Steam.</p>
-            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>.</p>
-            <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
-          </div>
-        </section>
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
-            Khi Steam yêu cầu "Go Online" để chơi tiếp
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="border border-slate-200 p-4 rounded-xl">
-              <h4 className="font-bold mb-2 text-slate-900">Bước 1:</h4>
-              <p className="text-sm text-slate-600">Vui lòng tự kiểm tra và Update Windows, driver card màn hình và các driver khác trong máy tính của bạn lên bản mới nhất.</p>
+        <div className="p-6 md:p-10 space-y-8 text-slate-700">
+          <section>
+            <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+              <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+              Về gói Share
+            </h3>
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4 text-blue-800 font-medium">
+              👉 Khi thanh toán xong, hãy nhắn tin cho <strong>ADMIN</strong> bằng cách chat trong web hoặc liên hệ FB ở mục "Liên hệ".
             </div>
-            <div className="border border-slate-200 p-4 rounded-xl">
-              <h4 className="font-bold mb-2 text-slate-900">Bước 2:</h4>
-              <p className="text-sm text-slate-600">Hãy <strong>Inbox cho Admin</strong> để được hỗ trợ sửa lỗi.</p>
+            <ul className="list-disc pl-5 space-y-2 text-sm md:text-base leading-relaxed">
+              <li>Bạn sẽ nhận được một <strong>Tài khoản Steam có sẵn Football Manager 2026 PC</strong>.</li>
+              <li>Đây là hình thức <strong>Share Steam Offline</strong> (chơi ở chế độ ngoại tuyến).</li>
+              <li>File save game được lưu riêng trên máy tính của bạn, hoàn toàn bảo mật.</li>
+              <li className="text-red-600 font-bold bg-red-50 p-2 rounded-lg">Tuyệt đối không thay đổi email hay mật khẩu của tài khoản được cấp.</li>
+              <li className="italic text-slate-500">Lưu ý: Gói này không hỗ trợ chơi tại tiệm nét hoặc qua các dịch vụ Cloud PC.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+              <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+              Sau khi đã cài đặt xong
+            </h3>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm md:text-base">
+              <p className="flex items-start gap-2"><AlertTriangle className="text-amber-500 shrink-0 mt-1" size={18} /> <strong>KHÔNG nhấn "Go Online"</strong> hoặc thay đổi nick khác trên Steam.</p>
+              <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>.</p>
+              <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
             </div>
-          </div>
-        </section>
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
-            Một vài lưu ý khác
-          </h3>
-          <div className="space-y-4 text-sm md:text-base">
-            <div>
-              <strong className="block text-slate-900 mb-1">Bạn đã có nick Steam khác?</strong>
-              <p>Bạn vẫn share offline được, nhưng cần tuân thủ đúng các bước hướng dẫn. Page sẵn sàng hỗ trợ nếu bị văng nick hoặc lỗi "Go Online", nhưng sẽ <strong>hạn chế hỗ trợ</strong> nếu bạn tự ý đổi nick qua lại để chơi game khác.</p>
-            </div>
-            <div>
-              <strong className="block text-slate-900 mb-1 flex items-center gap-2"><Info size={16} /> Phạm vi hỗ trợ:</strong>
-              <p>Page chỉ hỗ trợ các vấn đề liên quan đến cài đặt và kích hoạt game. Các vấn đề về gameplay, chiến thuật... vui lòng tham gia group cộng đồng: <a href="https://www.facebook.com/groups/fmvnofficial" target="_blank" rel="noreferrer" className="text-blue-600 underline">FMVN Official</a></p>
-            </div>
-            <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
-              <div className="flex-1 bg-amber-50 p-3 rounded-lg flex gap-3 items-start">
-                <Clock className="text-amber-600 shrink-0" size={20} />
-                <div>
-                  <strong className="block text-amber-800 text-sm">Giờ hỗ trợ</strong>
-                  <p className="text-xs text-amber-700 mt-1">Tránh nhắn tin sau 11h đêm.</p>
-                </div>
+          </section>
+
+          <section>
+            <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+              <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+              Khi Steam yêu cầu "Go Online" để chơi tiếp
+            </h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="border border-slate-200 p-4 rounded-xl">
+                <h4 className="font-bold mb-2 text-slate-900">Bước 1:</h4>
+                <p className="text-sm text-slate-600">Vui lòng tự kiểm tra và Update Windows, driver card màn hình và các driver khác trong máy tính của bạn lên bản mới nhất.</p>
               </div>
-              <div className="flex-1 bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
-                <Clock className="text-blue-600 shrink-0" size={20} />
-                <div>
-                  <strong className="block text-blue-800 text-sm">Thời gian chờ</strong>
-                  <p className="text-xs text-blue-700 mt-1">Nếu quá tải, vui lòng đợi 12 - 48 giờ.</p>
-                </div>
+              <div className="border border-slate-200 p-4 rounded-xl">
+                <h4 className="font-bold mb-2 text-slate-900">Bước 2:</h4>
+                <p className="text-sm text-slate-600">Hãy <strong>Inbox cho Admin</strong> để được hỗ trợ sửa lỗi.</p>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
 
-      <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
-        <button onClick={onBack} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-full font-bold transition shadow-lg">
-          Đã Hiểu & Quay Về Trang Chủ
-        </button>
+          <section>
+            <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+              <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
+              Một vài lưu ý khác
+            </h3>
+            <div className="space-y-4 text-sm md:text-base">
+              <div>
+                <strong className="block text-slate-900 mb-1">Bạn đã có nick Steam khác?</strong>
+                <p>Bạn vẫn share offline được, nhưng cần tuân thủ đúng các bước hướng dẫn. Page sẵn sàng hỗ trợ nếu bị văng nick hoặc lỗi "Go Online", nhưng sẽ <strong>hạn chế hỗ trợ</strong> nếu bạn tự ý đổi nick qua lại để chơi game khác.</p>
+              </div>
+              <div>
+                <strong className="block text-slate-900 mb-1 flex items-center gap-2"><Info size={16} /> Phạm vi hỗ trợ:</strong>
+                <p>Page chỉ hỗ trợ các vấn đề liên quan đến cài đặt và kích hoạt game. Các vấn đề về gameplay, chiến thuật... vui lòng tham gia group cộng đồng: <a href="https://www.facebook.com/groups/fmvnofficial" target="_blank" rel="noreferrer" className="text-blue-600 underline">FMVN Official</a></p>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
+                <div className="flex-1 bg-amber-50 p-3 rounded-lg flex gap-3 items-start">
+                  <Clock className="text-amber-600 shrink-0" size={20} />
+                  <div>
+                    <strong className="block text-amber-800 text-sm">Giờ hỗ trợ</strong>
+                    <p className="text-xs text-amber-700 mt-1">Tránh nhắn tin sau 11h đêm.</p>
+                  </div>
+                </div>
+                <div className="flex-1 bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
+                  <Clock className="text-blue-600 shrink-0" size={20} />
+                  <div>
+                    <strong className="block text-blue-800 text-sm">Thời gian chờ</strong>
+                    <p className="text-xs text-blue-700 mt-1">Nếu quá tải, vui lòng đợi 12 - 48 giờ.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
+          <button onClick={onBack} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-full font-bold transition shadow-lg">
+            Đã Hiểu & Quay Về Trang Chủ
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+}
 
-const PaymentModal = ({ product, onClose, user, onSuccess }) => {
+function PaymentModal({ product, onClose, user, onSuccess }) {
   const bankInfo = {
     bankId: 'mbbank',
     accountNo: '0394422547',
@@ -400,9 +405,9 @@ const PaymentModal = ({ product, onClose, user, onSuccess }) => {
       </div>
     </div>
   );
-};
+}
 
-const ChatWidget = ({ user, isDemo }) => {
+function ChatWidget({ user, isDemo }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -555,9 +560,9 @@ const ChatWidget = ({ user, isDemo }) => {
       )}
     </>
   );
-};
+}
 
-const AdminChatPanel = () => {
+function AdminChatPanel() {
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [replyText, setReplyText] = useState('');
@@ -669,9 +674,9 @@ const AdminChatPanel = () => {
       </div>
     </div>
   );
-};
+}
 
-const ProfilePage = ({ user, onBack }) => {
+function ProfilePage({ user, onBack }) {
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [photoURL, setPhotoURL] = useState(user?.photoURL || '');
   const [message, setMessage] = useState('');
@@ -741,9 +746,9 @@ const ProfilePage = ({ user, onBack }) => {
       </div>
     </div>
   );
-};
+}
 
-const RichTextEditor = ({ value, onChange }) => {
+function RichTextEditor({ value, onChange }) {
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -831,9 +836,9 @@ const RichTextEditor = ({ value, onChange }) => {
       />
     </div>
   );
-};
+}
 
-const AdminDashboard = ({ user, articles, products }) => {
+function AdminDashboard({ user, articles, products }) {
   const [activeTab, setActiveTab] = useState('articles');
 
   const [editingId, setEditingId] = useState(null);
@@ -1021,7 +1026,6 @@ const AdminDashboard = ({ user, articles, products }) => {
               </form>
               {message && <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{message}</div>}
             </div>
-
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h4 className="font-bold text-slate-700 mb-4">Danh sách sản phẩm ({products.length})</h4>
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
@@ -1044,10 +1048,9 @@ const AdminDashboard = ({ user, articles, products }) => {
       )}
     </div>
   );
-};
+}
 
-// --- Existing Navbar, ArticleCard, etc. (Keeping logic) ---
-const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, handleLogout }) => {
+function Navbar({ user, setView, currentView, setCategoryFilter, currentFilter, handleLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -1186,33 +1189,35 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
       )}
     </nav>
   );
-};
+}
 
-const ArticleCard = ({ article, onClick }) => (
-  <div onClick={() => onClick(article)} className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-amber-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-amber-50/50 flex flex-col h-full">
-    <div className="h-48 md:h-56 lg:h-60 overflow-hidden relative">
-      <img src={article.image || "https://placehold.co/600x400/f1f5f9/94a3b8?text=Blog+Image"} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 saturate-50 group-hover:saturate-100" />
-      <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-white/95 backdrop-blur text-slate-900 text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider border border-slate-100">
-        {article.category || 'Journal'}
+function ArticleCard({ article, onClick }) {
+  return (
+    <div onClick={() => onClick(article)} className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-amber-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-amber-50/50 flex flex-col h-full">
+      <div className="h-48 md:h-56 lg:h-60 overflow-hidden relative">
+        <img src={article.image || "https://placehold.co/600x400/f1f5f9/94a3b8?text=Blog+Image"} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 saturate-50 group-hover:saturate-100" />
+        <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-white/95 backdrop-blur text-slate-900 text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider border border-slate-100">
+          {article.category || 'Journal'}
+        </div>
+      </div>
+      <div className="p-5 md:p-6 flex flex-col flex-1">
+        <div className="mb-2 md:mb-3 flex items-center text-[10px] md:text-xs text-amber-600 font-medium uppercase tracking-widest">
+          {formatDateSafe(article.createdAt)}
+        </div>
+        <h3 className="text-lg md:text-xl font-serif font-bold text-slate-900 mb-3 leading-snug group-hover:text-amber-600 transition-colors line-clamp-2">{article.title}</h3>
+        <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
+          <span className="text-slate-500 text-xs font-medium flex items-center gap-2">
+            <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center"><User size={12} /></div>
+            <span className="truncate max-w-[100px]">{article.author || 'Admin'}</span>
+          </span>
+          <span className="text-slate-400 hover:text-amber-600 text-xs font-bold flex items-center gap-1 transition-colors">Xem thêm &rarr;</span>
+        </div>
       </div>
     </div>
-    <div className="p-5 md:p-6 flex flex-col flex-1">
-      <div className="mb-2 md:mb-3 flex items-center text-[10px] md:text-xs text-amber-600 font-medium uppercase tracking-widest">
-        {formatDateSafe(article.createdAt)}
-      </div>
-      <h3 className="text-lg md:text-xl font-serif font-bold text-slate-900 mb-3 leading-snug group-hover:text-amber-600 transition-colors line-clamp-2">{article.title}</h3>
-      <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
-        <span className="text-slate-500 text-xs font-medium flex items-center gap-2">
-          <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center"><User size={12} /></div>
-          <span className="truncate max-w-[100px]">{article.author || 'Admin'}</span>
-        </span>
-        <span className="text-slate-400 hover:text-amber-600 text-xs font-bold flex items-center gap-1 transition-colors">Xem thêm &rarr;</span>
-      </div>
-    </div>
-  </div>
-);
+  );
+}
 
-const ArticleDetail = ({ article, onBack, user }) => {
+function ArticleDetail({ article, onBack, user }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
 
@@ -1303,9 +1308,9 @@ const ArticleDetail = ({ article, onBack, user }) => {
       </div>
     </div>
   );
-};
+}
 
-const Store = ({ user, isDemo, setView }) => {
+function Store({ user, isDemo, setView }) {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [storeLoading, setStoreLoading] = useState(false);
@@ -1380,9 +1385,9 @@ const Store = ({ user, isDemo, setView }) => {
       )}
     </div>
   );
-};
+}
 
-const AuthModal = ({ setView, onLoginSuccess }) => {
+function AuthModal({ setView, onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -1438,9 +1443,9 @@ const AuthModal = ({ setView, onLoginSuccess }) => {
       </div>
     </div>
   );
-};
+}
 
-// --- Main App ---
+// --- 6. MAIN APP COMPONENT (The Router) ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('home');
@@ -1555,7 +1560,7 @@ export default function App() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 md:mb-12 gap-4">
                 <div className="flex items-center gap-4">
                   <div className="h-8 md:h-12 w-1 bg-gradient-to-b from-amber-400 to-yellow-600 rounded-full"></div>
-                  <h2 className="text-2xl md:text-4xl font-serif font-bold text-slate-900">{categoryFilter || "Bài Viết Mới Nhất"}</h2>
+                  <h2 className="text-2xl md:text-4xl font-serif font-bold text-slate-900">{categoryFilter ? categoryFilter : "Bài Viết Mới Nhất"}</h2>
                 </div>
                 {!categoryFilter && (
                   <button
