@@ -148,7 +148,6 @@ const MOCK_PRODUCTS = [
   }
 ];
 
-// Hàm helper để lấy collection
 const getCollRef = (colName) => collection(db, colName);
 
 const getUserDisplayName = (user) => {
@@ -156,6 +155,16 @@ const getUserDisplayName = (user) => {
   if (user.displayName) return user.displayName;
   if (user.email) return user.email.split('@')[0];
   return 'Bạn đọc';
+};
+
+// Helper để format ngày an toàn, tránh lỗi crash
+const formatDateSafe = (timestamp) => {
+  if (!timestamp || !timestamp.seconds) return 'Vừa xong';
+  try {
+    return new Date(timestamp.seconds * 1000).toLocaleDateString('vi-VN');
+  } catch (e) {
+    return '...';
+  }
 };
 
 const getFriendlyErrorMessage = (errorCode) => {
@@ -171,7 +180,7 @@ const getFriendlyErrorMessage = (errorCode) => {
   }
 };
 
-// --- COMPONENTS (Defined BEFORE usage) ---
+// --- COMPONENTS ---
 
 const DemoModeAlert = () => (
   <div className="fixed bottom-4 right-4 z-[200] w-[90%] max-w-sm md:w-auto bg-white/90 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in slide-in-from-bottom-5 mx-auto md:mx-0">
@@ -474,8 +483,8 @@ const AdminChatPanel = () => {
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
     if (chat.unreadAdmin) {
-      const chatsColRef = getCollRef(COLLECTIONS.CHATS);
-      await updateDoc(doc(chatsColRef, chat.id), {
+      const chatsCollection = getCollRef(COLLECTIONS.CHATS);
+      await updateDoc(doc(chatsCollection, chat.id), {
         unreadAdmin: false
       });
     }
@@ -492,8 +501,8 @@ const AdminChatPanel = () => {
     };
 
     try {
-      const chatsColRef = getCollRef(COLLECTIONS.CHATS);
-      const chatRef = doc(chatsColRef, selectedChat.id);
+      const chatsCollection = getCollRef(COLLECTIONS.CHATS);
+      const chatRef = doc(chatsCollection, selectedChat.id);
       const updatedMsgs = [...selectedChat.messages, newMsg];
       await updateDoc(chatRef, {
         messages: updatedMsgs,
@@ -521,7 +530,7 @@ const AdminChatPanel = () => {
           >
             <div className="flex justify-between items-start mb-1">
               <span className={`font-bold text-sm ${chat.unreadAdmin ? 'text-slate-900' : 'text-slate-600'}`}>{chat.userName}</span>
-              {chat.lastMessageTime && <span className="text-[10px] text-slate-400">{new Date(chat.lastMessageTime.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+              {chat.lastMessageTime && <span className="text-[10px] text-slate-400">{formatDateSafe(chat.lastMessageTime)}</span>}
             </div>
             <p className={`text-xs truncate ${chat.unreadAdmin ? 'font-bold text-slate-800' : 'text-slate-500'}`}>{chat.lastMessage}</p>
           </div>
@@ -1120,7 +1129,7 @@ const ArticleCard = ({ article, onClick }) => (
     </div>
     <div className="p-5 md:p-6 flex flex-col flex-1">
       <div className="mb-2 md:mb-3 flex items-center text-[10px] md:text-xs text-amber-600 font-medium uppercase tracking-widest">
-        {new Date(article.createdAt?.seconds * 1000).toLocaleDateString('vi-VN')}
+        {formatDateSafe(article.createdAt)}
       </div>
       <h3 className="text-lg md:text-xl font-serif font-bold text-slate-900 mb-3 leading-snug group-hover:text-amber-600 transition-colors line-clamp-2">{article.title}</h3>
       <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
@@ -1133,6 +1142,99 @@ const ArticleCard = ({ article, onClick }) => (
     </div>
   </div>
 );
+
+const ArticleDetail = ({ article, onBack, user }) => {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+
+  useEffect(() => {
+    if (!article?.id || !user) return;
+    const q = query(getCollRef(COLLECTIONS.COMMENTS), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allComments = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setComments(allComments.filter(c => c.articleId === article.id));
+    }, () => { });
+    return () => unsubscribe();
+  }, [article, user]);
+
+  const handlePostComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    try {
+      const userName = getUserDisplayName(user);
+      await addDoc(getCollRef(COLLECTIONS.COMMENTS), {
+        articleId: article.id, text: newComment, userId: user.uid,
+        userName: userName, createdAt: serverTimestamp()
+      });
+      setNewComment('');
+    } catch (error) { alert("Vui lòng đăng nhập để bình luận."); }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-8 md:py-12 px-4 animate-in fade-in duration-700">
+      <button onClick={onBack} className="mb-6 md:mb-8 px-4 md:px-5 py-2 rounded-full border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-900 transition flex items-center gap-2 text-sm font-bold group">
+        &larr; Quay lại <span className="hidden sm:inline group-hover:translate-x-1 transition-transform">Trang chủ</span>
+      </button>
+
+      <article className="mb-10 md:mb-16">
+        <div className="text-center mb-8 md:mb-10">
+          <span className="text-amber-600 font-bold tracking-widest text-[10px] md:text-xs uppercase mb-3 md:mb-4 block">{article.category}</span>
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-bold text-slate-900 leading-tight mb-4 md:mb-6">{article.title}</h1>
+          <div className="flex items-center justify-center gap-4 text-slate-400 text-xs md:text-sm">
+            <span className="font-medium text-slate-600">Bởi {article.author || 'Admin'}</span>
+            <span>&bull;</span>
+            <span>{formatDateSafe(article.createdAt)}</span>
+          </div>
+        </div>
+
+        <div className="rounded-xl md:rounded-2xl overflow-hidden shadow-xl shadow-slate-200 mb-8 md:mb-12">
+          <img src={article.image || "https://placehold.co/800x400"} alt={article.title} className="w-full h-auto object-cover" />
+        </div>
+
+        <div className="prose prose-base md:prose-lg prose-slate max-w-none prose-headings:font-serif prose-a:text-amber-600 prose-img:rounded-xl text-slate-600 leading-relaxed px-1" dangerouslySetInnerHTML={{ __html: article.content }} />
+      </article>
+
+      <div className="border-t border-slate-100 pt-8 md:pt-12">
+        <h3 className="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-6 md:mb-8">Thảo luận ({comments.length})</h3>
+
+        {user ? (
+          <form onSubmit={handlePostComment} className="mb-8 md:mb-12">
+            <textarea
+              value={newComment} onChange={(e) => setNewComment(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:bg-white focus:ring-1 focus:ring-amber-500 outline-none transition min-h-[100px] md:min-h-[120px] resize-none placeholder:text-slate-400"
+              placeholder="Chia sẻ suy nghĩ của bạn..."
+            />
+            <div className="flex justify-end mt-3">
+              <button type="submit" className="bg-slate-900 hover:bg-amber-600 text-white px-5 md:px-6 py-2 rounded-full font-bold text-sm transition active:scale-95">Gửi bình luận</button>
+            </div>
+          </form>
+        ) : (
+          <div className="bg-slate-50 p-6 md:p-8 rounded-2xl text-center mb-8 md:mb-12 border border-slate-100">
+            <p className="text-slate-500 mb-4 text-sm md:text-base">Bạn cần đăng nhập để tham gia thảo luận.</p>
+            <button className="text-amber-600 font-bold underline">Đăng nhập ngay</button>
+          </div>
+        )}
+
+        <div className="space-y-6 md:space-y-8">
+          {comments.map(comment => (
+            <div key={comment.id} className="flex gap-3 md:gap-4">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-serif font-bold border border-slate-200 shrink-0 text-sm md:text-base">
+                {comment.userName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-baseline mb-1">
+                  <span className="font-bold text-slate-900 text-sm md:text-base">{comment.userName}</span>
+                  <span className="text-[10px] md:text-xs text-slate-400">{formatDateSafe(comment.createdAt)}</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed text-sm md:text-base">{comment.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Store = ({ user, isDemo, setView }) => {
   const [products, setProducts] = useState([]);
@@ -1269,6 +1371,7 @@ const AuthModal = ({ setView, onLoginSuccess }) => {
   );
 };
 
+// --- Main App ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('home');
