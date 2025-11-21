@@ -66,7 +66,10 @@ import {
   Settings,
   WifiOff,
   Crown,
-  LogIn
+  LogIn,
+  ShieldAlert,
+  Info,
+  Clock
 } from 'lucide-react';
 
 // --- Firebase Setup (Cấu hình của bạn) ---
@@ -176,8 +179,113 @@ const DemoModeAlert = () => (
   </div>
 );
 
+// NEW COMPONENT: Product Guide
+const ProductGuide = ({ onBack }) => (
+  <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
+    <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="bg-gradient-to-r from-amber-500 to-yellow-600 p-8 text-white text-center">
+        <div className="flex justify-center mb-4">
+          <div className="bg-white/20 p-4 rounded-full">
+            <ShieldAlert size={48} className="text-white" />
+          </div>
+        </div>
+        <h1 className="text-2xl md:text-3xl font-bold font-serif uppercase tracking-wider mb-2">Lưu Ý Quan Trọng & Hướng Dẫn Sử Dụng</h1>
+        <p className="opacity-90 text-sm md:text-base">Để đảm bảo quyền lợi và trải nghiệm, bạn vui lòng ĐỌC KỸ các thông tin sau</p>
+      </div>
+
+      <div className="p-6 md:p-10 space-y-8 text-slate-700">
+        {/* Section 1 */}
+        <section>
+          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+            Về gói Share
+          </h3>
+          <ul className="list-disc pl-5 space-y-2 text-sm md:text-base leading-relaxed">
+            <li>Bạn sẽ nhận được một <strong>Tài khoản Steam có sẵn Football Manager 2026 PC</strong>.</li>
+            <li>Đây là hình thức <strong>Share Steam Offline</strong> (chơi ở chế độ ngoại tuyến).</li>
+            <li>File save game được lưu riêng trên máy tính của bạn, hoàn toàn bảo mật.</li>
+            <li className="text-red-600 font-bold bg-red-50 p-2 rounded-lg">Tuyệt đối không thay đổi email hay mật khẩu của tài khoản được cấp.</li>
+            <li className="italic text-slate-500">Lưu ý: Gói này không hỗ trợ chơi tại tiệm nét hoặc qua các dịch vụ Cloud PC.</li>
+          </ul>
+        </section>
+
+        {/* Section 2 */}
+        <section>
+          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+            Sau khi đã cài đặt xong
+          </h3>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm md:text-base">
+            <p className="flex items-start gap-2"><AlertTriangle className="text-amber-500 shrink-0 mt-1" size={18}/> <strong>KHÔNG nhấn "Go Online"</strong> hoặc thay đổi nick khác trên Steam.</p>
+            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>. (Nếu bật Steam thấy chữ "Installing..." thì cứ để bình thường).</p>
+            <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
+          </div>
+        </section>
+
+        {/* Section 3 */}
+        <section>
+          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+            Khi Steam yêu cầu "Go Online" để chơi tiếp
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="border border-slate-200 p-4 rounded-xl">
+              <h4 className="font-bold mb-2 text-slate-900">Bước 1:</h4>
+              <p className="text-sm text-slate-600">Vui lòng tự kiểm tra và Update Windows, driver card màn hình và các driver khác trong máy tính của bạn lên bản mới nhất.</p>
+            </div>
+            <div className="border border-slate-200 p-4 rounded-xl">
+              <h4 className="font-bold mb-2 text-slate-900">Bước 2:</h4>
+              <p className="text-sm text-slate-600">Hãy <strong>Inbox cho Page</strong> để được hỗ trợ sửa lỗi.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4 */}
+        <section>
+          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
+            Một vài lưu ý khác
+          </h3>
+          <div className="space-y-4 text-sm md:text-base">
+            <div>
+              <strong className="block text-slate-900 mb-1">Bạn đã có nick Steam khác?</strong>
+              <p>Bạn vẫn share offline được, nhưng cần tuân thủ đúng các bước hướng dẫn. Page sẵn sàng hỗ trợ nếu bị văng nick hoặc lỗi "Go Online", nhưng sẽ <strong>hạn chế hỗ trợ</strong> nếu bạn tự ý đổi nick qua lại để chơi game khác.</p>
+            </div>
+            <div>
+              <strong className="block text-slate-900 mb-1 flex items-center gap-2"><Info size={16}/> Phạm vi hỗ trợ:</strong>
+              <p>Page chỉ hỗ trợ các vấn đề liên quan đến cài đặt và kích hoạt game. Các vấn đề về gameplay, chiến thuật... vui lòng tham gia group cộng đồng: <a href="https://www.facebook.com/groups/fmvnofficial" target="_blank" rel="noreferrer" className="text-blue-600 underline">FMVN Official</a></p>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
+               <div className="flex-1 bg-amber-50 p-3 rounded-lg flex gap-3 items-start">
+                  <Clock className="text-amber-600 shrink-0" size={20}/>
+                  <div>
+                    <strong className="block text-amber-800 text-sm">Giờ hỗ trợ</strong>
+                    <p className="text-xs text-amber-700 mt-1">Tránh nhắn tin sau 11h đêm.</p>
+                  </div>
+               </div>
+               <div className="flex-1 bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
+                  <Clock className="text-blue-600 shrink-0" size={20}/>
+                  <div>
+                    <strong className="block text-blue-800 text-sm">Thời gian chờ</strong>
+                    <p className="text-xs text-blue-700 mt-1">Nếu quá tải, vui lòng đợi 12 - 48 giờ.</p>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
+        <button onClick={onBack} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-full font-bold transition shadow-lg">
+          Đã Hiểu & Quay Về Trang Chủ
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 // 1. Payment Modal (QR Code - Gold Theme)
-const PaymentModal = ({ product, onClose, user }) => {
+const PaymentModal = ({ product, onClose, user, onSuccess }) => {
   const bankInfo = {
     bankId: 'mbbank',
     accountNo: '0394422547',
@@ -188,6 +296,12 @@ const PaymentModal = ({ product, onClose, user }) => {
   const userName = getUserDisplayName(user);
   const memo = `BLOG ${userName} mua ${product.name}`.replace(/[^a-zA-Z0-9 ]/g, "");
   const qrUrl = `https://img.vietqr.io/image/${bankInfo.bankId}-${bankInfo.accountNo}-${bankInfo.template}.png?amount=${product.price}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(bankInfo.accountName)}`;
+
+  const handleConfirmPayment = () => {
+    // Logic xử lý xác nhận (nếu có backend)
+    onClose();
+    onSuccess(); // Chuyển hướng sang trang Hướng dẫn
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -227,7 +341,7 @@ const PaymentModal = ({ product, onClose, user }) => {
              </div>
           </div>
 
-          <button onClick={() => { alert('Cảm ơn bạn đã ủng hộ Blog!'); onClose(); }} className="w-full mt-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2 active:scale-95">
+          <button onClick={handleConfirmPayment} className="w-full mt-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2 active:scale-95">
              <CheckCircle size={20} /> Xác nhận thanh toán
           </button>
         </div>
@@ -465,7 +579,7 @@ const ArticleCard = ({ article, onClick }) => (
 );
 
 // 5. Store Component (Full Width Layout)
-const Store = ({ user, isDemo }) => {
+const Store = ({ user, isDemo, setView }) => { // Added setView prop
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [storeLoading, setStoreLoading] = useState(false); 
@@ -491,7 +605,14 @@ const Store = ({ user, isDemo }) => {
 
   return (
     <div className="max-w-[1800px] mx-auto py-10 md:py-16 px-6 lg:px-10">
-      {selectedProduct && <PaymentModal product={selectedProduct} user={user} onClose={() => setSelectedProduct(null)} />}
+      {selectedProduct && (
+        <PaymentModal 
+            product={selectedProduct} 
+            user={user} 
+            onClose={() => setSelectedProduct(null)}
+            onSuccess={() => setView('guide')} // Go to Guide on success
+        />
+      )}
 
       <div className="text-center mb-12 md:mb-20 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-amber-100 blur-[60px] rounded-full -z-10 opacity-50"></div>
@@ -956,7 +1077,8 @@ export default function App() {
         )}
 
         {view === 'article' && activeArticle && <ArticleDetail article={activeArticle} onBack={() => setView('home')} user={user} />}
-        {view === 'store' && <Store user={user} isDemo={isDemo} />}
+        {view === 'store' && <Store user={user} isDemo={isDemo} setView={setView} />}
+        {view === 'guide' && <ProductGuide onBack={() => setView('home')} />}
         {view === 'admin' && (user?.email === ADMIN_EMAIL ? <AdminDashboard user={user} /> : <div className="flex items-center justify-center h-[60vh] text-slate-400 px-4 text-center">Bạn cần quyền Admin ({ADMIN_EMAIL}) để truy cập.</div>)}
         {view === 'login' && <AuthModal setView={setView} onLoginSuccess={() => setView('home')} />}
       </main>
