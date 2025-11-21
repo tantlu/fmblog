@@ -312,7 +312,7 @@ const RichTextEditor = ({ value, onChange }) => {
   );
 };
 
-// 3. Navbar (Responsive Updated)
+// 3. Navbar (Full Width - Luxury)
 const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -337,7 +337,7 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
 
   return (
     <nav className="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 transition-all duration-300 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <div className="flex items-center cursor-pointer group" onClick={() => { setView('home'); setCategoryFilter(null); }}>
@@ -351,18 +351,18 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
           </div>
           
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-2">
             {navItems.map(item => (
               <button
                 key={item.id}
                 onClick={item.action}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${isActive(item) ? 'bg-amber-50 text-amber-600 font-bold shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${isActive(item) ? 'bg-amber-50 text-amber-600 font-bold shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
               >
                 {item.icon} {item.label}
               </button>
             ))}
              {user?.email === ADMIN_EMAIL && (
-                <button onClick={() => setView('admin')} className={`ml-2 px-4 py-2 rounded-full text-sm font-bold transition border ${currentView === 'admin' ? 'bg-slate-900 text-white border-slate-900' : 'text-slate-900 border-slate-200 hover:bg-slate-50'}`}>
+                <button onClick={() => setView('admin')} className={`ml-2 px-5 py-2.5 rounded-full text-sm font-bold transition border ${currentView === 'admin' ? 'bg-slate-900 text-white border-slate-900' : 'text-slate-900 border-slate-200 hover:bg-slate-50'}`}>
                   Admin
                 </button>
               )}
@@ -464,7 +464,7 @@ const ArticleCard = ({ article, onClick }) => (
   </div>
 );
 
-// 5. Store Component (Responsive)
+// 5. Store Component (Full Width Layout)
 const Store = ({ user, isDemo }) => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -490,7 +490,7 @@ const Store = ({ user, isDemo }) => {
   }, [user, isDemo]);
 
   return (
-    <div className="max-w-7xl mx-auto py-10 md:py-16 px-4">
+    <div className="max-w-[1800px] mx-auto py-10 md:py-16 px-6 lg:px-10">
       {selectedProduct && <PaymentModal product={selectedProduct} user={user} onClose={() => setSelectedProduct(null)} />}
 
       <div className="text-center mb-12 md:mb-20 relative">
@@ -536,7 +536,7 @@ const Store = ({ user, isDemo }) => {
   );
 };
 
-// 6. Admin Dashboard (Responsive)
+// 6. Admin Dashboard (Full Width Support)
 const AdminDashboard = ({ user }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(CATEGORIES.NEWS);
@@ -590,7 +590,7 @@ const AdminDashboard = ({ user }) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 md:py-12 px-4">
+    <div className="max-w-[1600px] mx-auto py-8 md:py-12 px-4 lg:px-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900">Quản Trị Blog</h1>
         <div className="bg-amber-50 text-amber-700 px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-amber-100 text-xs md:text-sm font-bold flex items-center gap-2 truncate max-w-full">
@@ -670,7 +670,7 @@ const AdminDashboard = ({ user }) => {
   );
 };
 
-// 7. Article Detail (Responsive)
+// 7. Article Detail (Responsive - Centered Reading)
 const ArticleDetail = ({ article, onBack, user }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -699,7 +699,7 @@ const ArticleDetail = ({ article, onBack, user }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 md:py-12 px-4 animate-in fade-in duration-700">
+    <div className="max-w-4xl mx-auto py-8 md:py-12 px-4 animate-in fade-in duration-700">
       <button onClick={onBack} className="mb-6 md:mb-8 px-4 md:px-5 py-2 rounded-full border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-900 transition flex items-center gap-2 text-sm font-bold group">
           &larr; Quay lại <span className="hidden sm:inline group-hover:translate-x-1 transition-transform">Trang chủ</span>
       </button>
@@ -896,7 +896,7 @@ export default function App() {
                 {/* Background Decor */}
                 <div className="absolute top-0 right-0 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-amber-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 opacity-60 pointer-events-none"></div>
                 
-                <div className="max-w-7xl mx-auto py-16 md:py-24 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center relative z-10">
+                <div className="max-w-[1800px] mx-auto py-16 md:py-24 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center relative z-10">
                     <div className="md:w-1/2 mb-10 md:mb-0 animate-in slide-in-from-left-10 fade-in duration-700">
                         <div className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-500 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6 md:mb-8 shadow-sm">
                             <Star size={12} className="text-amber-500" /> Nhật ký quản lý bóng đá
@@ -927,7 +927,7 @@ export default function App() {
                 </div>
             )}
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+            <div className="max-w-[1800px] mx-auto px-6 lg:px-10 mt-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 md:mb-12 gap-4">
                 <div className="flex items-center gap-4">
                     <div className="h-8 md:h-12 w-1 bg-gradient-to-b from-amber-400 to-yellow-600 rounded-full"></div>
@@ -936,7 +936,7 @@ export default function App() {
                 {!categoryFilter && <button className="text-amber-600 text-sm font-bold hover:text-amber-700 flex items-center gap-1 border-b-2 border-amber-100 hover:border-amber-600 pb-1 transition-all self-end sm:self-auto">Xem toàn bộ <span className="text-lg">&rarr;</span></button>}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
                 {filteredArticles.length > 0 ? (
                   filteredArticles.map(article => (
                     <ArticleCard key={article.id} article={article} onClick={handleArticleClick} />
@@ -962,7 +962,7 @@ export default function App() {
       </main>
       
       <footer className="bg-white border-t border-slate-100 py-10 md:py-12 text-center text-slate-500 text-sm">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1800px] mx-auto px-6 lg:px-10">
             <div className="flex justify-center items-center gap-3 mb-6 md:mb-8">
                 <div className="bg-slate-900 p-2.5 rounded-lg text-white shadow-lg shadow-amber-100"><Gamepad2 size={24}/></div>
                 <span className="font-serif font-bold text-xl md:text-2xl text-slate-900 tracking-widest">FM BLOG</span>
