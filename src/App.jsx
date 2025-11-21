@@ -160,7 +160,6 @@ const MOCK_PRODUCTS = [
   }
 ];
 
-// Sử dụng collection trực tiếp cho dự án riêng của bạn
 const getCollRef = (colName) => collection(db, colName);
 
 const getUserDisplayName = (user) => {
@@ -206,7 +205,6 @@ const DemoModeAlert = () => (
   </div>
 );
 
-// PAGE: Contact Page
 const ContactPage = () => (
   <div className="max-w-4xl mx-auto py-16 px-4 animate-in fade-in duration-500">
     <div className="text-center mb-12">
@@ -244,7 +242,6 @@ const ContactPage = () => (
   </div>
 );
 
-// PAGE: Product Guide
 const ProductGuide = ({ onBack }) => (
   <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
     <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
@@ -259,7 +256,6 @@ const ProductGuide = ({ onBack }) => (
       </div>
 
       <div className="p-6 md:p-10 space-y-8 text-slate-700">
-        {/* Section 1 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
@@ -277,7 +273,6 @@ const ProductGuide = ({ onBack }) => (
           </ul>
         </section>
 
-        {/* Section 2 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
@@ -285,12 +280,11 @@ const ProductGuide = ({ onBack }) => (
           </h3>
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm md:text-base">
             <p className="flex items-start gap-2"><AlertTriangle className="text-amber-500 shrink-0 mt-1" size={18} /> <strong>KHÔNG nhấn "Go Online"</strong> hoặc thay đổi nick khác trên Steam.</p>
-            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>. (Nếu bật Steam thấy chữ "Installing..." thì cứ để bình thường).</p>
+            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>.</p>
             <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
           </div>
         </section>
 
-        {/* Section 3 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
@@ -308,7 +302,6 @@ const ProductGuide = ({ onBack }) => (
           </div>
         </section>
 
-        {/* Section 4 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
@@ -431,10 +424,7 @@ const ChatWidget = ({ user, isDemo }) => {
 
   useEffect(() => {
     if (!chatId || isDemo) return;
-
-    const chatsColRef = getCollRef(COLLECTIONS.CHATS);
-    const chatDocRef = doc(chatsColRef, chatId);
-
+    const chatDocRef = doc(getCollRef(COLLECTIONS.CHATS), chatId);
     const unsubscribe = onSnapshot(chatDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setMessages(docSnap.data().messages || []);
@@ -453,14 +443,8 @@ const ChatWidget = ({ user, isDemo }) => {
     e.preventDefault();
     if (!inputText.trim() || isDemo) return;
 
-    const newMsg = {
-      text: inputText,
-      sender: 'user',
-      timestamp: Date.now()
-    };
-
-    const chatsColRef = getCollRef(COLLECTIONS.CHATS);
-    const chatDocRef = doc(chatsColRef, chatId);
+    const newMsg = { text: inputText, sender: 'user', timestamp: Date.now() };
+    const chatDocRef = doc(getCollRef(COLLECTIONS.CHATS), chatId);
     const currentHour = new Date().getHours();
     const isOfflineHours = currentHour >= 22 || currentHour < 8;
 
@@ -517,10 +501,7 @@ const ChatWidget = ({ user, isDemo }) => {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[150] bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-amber-600 transition-all transform hover:scale-110 flex items-center justify-center"
-      >
+      <button onClick={() => setIsOpen(!isOpen)} className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[150] bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-amber-600 transition-all transform hover:scale-110 flex items-center justify-center">
         {isOpen ? <X size={24} /> : <MessageCircle size={24} className="animate-pulse" />}
       </button>
 
@@ -542,12 +523,7 @@ const ChatWidget = ({ user, isDemo }) => {
             )}
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-xl text-sm ${msg.sender === 'user'
-                    ? 'bg-amber-500 text-white rounded-tr-none'
-                    : msg.sender === 'system'
-                      ? 'bg-slate-200 text-slate-600 text-xs italic border border-slate-300 text-center w-full'
-                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'
-                  }`}>
+                <div className={`max-w-[80%] p-3 rounded-xl text-sm ${msg.sender === 'user' ? 'bg-amber-500 text-white rounded-tr-none' : msg.sender === 'system' ? 'bg-slate-200 text-slate-600 text-xs italic border border-slate-300 text-center w-full' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'}`}>
                   {msg.text}
                 </div>
               </div>
@@ -594,26 +570,17 @@ const AdminChatPanel = () => {
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
     if (chat.unreadAdmin) {
-      const chatsCollection = getCollRef(COLLECTIONS.CHATS);
-      await updateDoc(doc(chatsCollection, chat.id), {
-        unreadAdmin: false
-      });
+      await updateDoc(doc(getCollRef(COLLECTIONS.CHATS), chat.id), { unreadAdmin: false });
     }
   };
 
   const handleReply = async (e) => {
     e.preventDefault();
     if (!replyText.trim() || !selectedChat) return;
-
-    const newMsg = {
-      text: replyText,
-      sender: 'admin',
-      timestamp: Date.now()
-    };
+    const newMsg = { text: replyText, sender: 'admin', timestamp: Date.now() };
 
     try {
-      const chatsCollection = getCollRef(COLLECTIONS.CHATS);
-      const chatRef = doc(chatsCollection, selectedChat.id);
+      const chatRef = doc(getCollRef(COLLECTIONS.CHATS), selectedChat.id);
       const updatedMsgs = [...selectedChat.messages, newMsg];
       await updateDoc(chatRef, {
         messages: updatedMsgs,
@@ -662,12 +629,7 @@ const AdminChatPanel = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
               {selectedChat.messages?.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.sender === 'admin' ? 'justify-end' : (msg.sender === 'system' ? 'justify-center' : 'justify-start')}`}>
-                  <div className={`max-w-[70%] p-3 rounded-xl text-sm ${msg.sender === 'admin'
-                      ? 'bg-slate-800 text-white'
-                      : msg.sender === 'system'
-                        ? 'bg-transparent text-slate-400 text-xs italic border border-slate-200'
-                        : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
-                    }`}>
+                  <div className={`max-w-[70%] p-3 rounded-xl text-sm ${msg.sender === 'admin' ? 'bg-slate-800 text-white' : msg.sender === 'system' ? 'bg-transparent text-slate-400 text-xs italic border border-slate-200' : 'bg-white border border-slate-200 text-slate-800 shadow-sm'}`}>
                     {msg.text}
                   </div>
                 </div>
@@ -676,15 +638,8 @@ const AdminChatPanel = () => {
             </div>
 
             <form onSubmit={handleReply} className="p-4 border-t border-slate-100 flex gap-3">
-              <input
-                value={replyText}
-                onChange={e => setReplyText(e.target.value)}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-amber-500"
-                placeholder="Nhập câu trả lời..."
-              />
-              <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-full transition">
-                <Send size={20} />
-              </button>
+              <input value={replyText} onChange={e => setReplyText(e.target.value)} className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-amber-500" placeholder="Nhập câu trả lời..." />
+              <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-full transition"><Send size={20} /></button>
             </form>
           </>
         ) : (
@@ -709,14 +664,9 @@ const ProfilePage = ({ user, onBack }) => {
     setMessage('');
     setError('');
     try {
-      await updateProfile(user, {
-        displayName: displayName,
-        photoURL: photoURL
-      });
+      await updateProfile(user, { displayName, photoURL });
       setMessage('Cập nhật thông tin thành công!');
-    } catch (err) {
-      setError(getFriendlyErrorMessage(err.code));
-    }
+    } catch (err) { setError(getFriendlyErrorMessage(err.code)); }
   };
 
   const handleResetPassword = async () => {
@@ -724,81 +674,48 @@ const ProfilePage = ({ user, onBack }) => {
     try {
       await sendPasswordResetEmail(auth, user.email);
       setMessage(`Đã gửi email đặt lại mật khẩu tới ${user.email}`);
-    } catch (err) {
-      setError(getFriendlyErrorMessage(err.code));
-    }
+    } catch (err) { setError(getFriendlyErrorMessage(err.code)); }
   };
 
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 animate-in fade-in duration-500">
       <div className="mb-8 flex items-center gap-2">
-        <button onClick={onBack} className="text-slate-500 hover:text-slate-900 flex items-center gap-1 text-sm font-bold">
-          &larr; Quay lại
-        </button>
+        <button onClick={onBack} className="text-slate-500 hover:text-slate-900 flex items-center gap-1 text-sm font-bold">&larr; Quay lại</button>
       </div>
-
       <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-white text-center relative">
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500 rounded-full blur-3xl"></div>
-          </div>
           <div className="relative z-10">
             <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 p-1 flex items-center justify-center overflow-hidden shadow-lg">
-              {photoURL ? (
-                <img src={photoURL} alt="Avatar" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <User size={48} className="text-slate-300" />
-              )}
+              {photoURL ? <img src={photoURL} alt="Avatar" className="w-full h-full rounded-full object-cover" /> : <User size={48} className="text-slate-300" />}
             </div>
             <h1 className="text-2xl font-serif font-bold">{user?.displayName || 'Chưa đặt tên'}</h1>
             <p className="text-slate-400 text-sm">{user?.email}</p>
             {user?.email === ADMIN_EMAIL && <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2">ADMIN</span>}
           </div>
         </div>
-
         <div className="p-8">
           {message && <div className="mb-6 p-3 bg-green-50 text-green-700 text-sm rounded-lg flex items-center gap-2"><CheckCircle size={16} /> {message}</div>}
           {error && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-center gap-2"><AlertTriangle size={16} /> {error}</div>}
-
           <form onSubmit={handleUpdateProfile} className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">Tên hiển thị</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 text-slate-400" size={18} />
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition"
-                  placeholder="Nhập tên của bạn"
-                />
+                <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition" placeholder="Nhập tên của bạn" />
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">Avatar (Link ảnh)</label>
               <div className="relative">
                 <Camera className="absolute left-3 top-3 text-slate-400" size={18} />
-                <input
-                  type="text"
-                  value={photoURL}
-                  onChange={(e) => setPhotoURL(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition"
-                  placeholder="https://example.com/avatar.jpg"
-                />
+                <input type="text" value={photoURL} onChange={(e) => setPhotoURL(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition" placeholder="https://example.com/avatar.jpg" />
               </div>
             </div>
-
             <div className="pt-4 flex flex-col gap-4">
-              <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-amber-600 transition shadow-lg flex items-center justify-center gap-2">
-                <Save size={18} /> Lưu Thay Đổi
-              </button>
-
+              <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-amber-600 transition shadow-lg flex items-center justify-center gap-2"><Save size={18} /> Lưu Thay Đổi</button>
               <div className="border-t border-slate-100 pt-4 mt-2">
                 <h4 className="text-sm font-bold text-slate-700 mb-3">Bảo mật</h4>
-                <button type="button" onClick={handleResetPassword} className="w-full border border-slate-200 text-slate-600 py-2.5 rounded-xl font-medium hover:bg-slate-50 transition flex items-center justify-center gap-2">
-                  <Lock size={16} /> Đổi mật khẩu (Gửi Email)
-                </button>
+                <button type="button" onClick={handleResetPassword} className="w-full border border-slate-200 text-slate-600 py-2.5 rounded-xl font-medium hover:bg-slate-50 transition flex items-center justify-center gap-2"><Lock size={16} /> Đổi mật khẩu (Gửi Email)</button>
               </div>
             </div>
           </form>
@@ -839,9 +756,7 @@ const RichTextEditor = ({ value, onChange }) => {
   };
 
   const ToolBtn = ({ onClick, icon: Icon, title }) => (
-    <button type="button" onClick={onClick} className="p-2 hover:bg-slate-200 rounded text-slate-600 transition hover:text-amber-600 shrink-0" title={title}>
-      <Icon size={18} />
-    </button>
+    <button type="button" onClick={onClick} className="p-2 hover:bg-slate-200 rounded text-slate-600 transition hover:text-amber-600 shrink-0" title={title}><Icon size={18} /></button>
   );
 
   return (
@@ -893,6 +808,7 @@ const RichTextEditor = ({ value, onChange }) => {
         className="flex-1 p-6 overflow-y-auto text-slate-800 focus:outline-none prose prose-slate max-w-none prose-headings:font-serif prose-headings:text-slate-900 prose-a:text-amber-600 prose-img:rounded-xl prose-blockquote:border-l-4 prose-blockquote:border-amber-500 prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
         contentEditable
         onInput={handleInput}
+        suppressContentEditableWarning={true}
         style={{ whiteSpace: 'pre-wrap' }}
       />
     </div>
@@ -901,14 +817,12 @@ const RichTextEditor = ({ value, onChange }) => {
 
 const AdminDashboard = ({ user, articles, products }) => {
   const [activeTab, setActiveTab] = useState('articles');
-
   const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(CATEGORIES.NEWS);
   const [image, setImage] = useState('');
   const [content, setContent] = useState('');
   const [message, setMessage] = useState('');
-
   const [editingProdId, setEditingProdId] = useState(null);
   const [prodName, setProdName] = useState('');
   const [prodPrice, setProdPrice] = useState('');
@@ -920,7 +834,7 @@ const AdminDashboard = ({ user, articles, products }) => {
     setTitle(article.title);
     setCategory(article.category);
     setImage(article.image);
-    setContent(article.content);
+    setContent(article.content || '');
     window.scrollTo(0, 0);
   };
 
@@ -936,17 +850,13 @@ const AdminDashboard = ({ user, articles, products }) => {
     e.preventDefault();
     try {
       if (editingId) {
-        await updateDoc(doc(db, COLLECTIONS.ARTICLES, editingId), {
-          title, category, image, content,
-          updatedAt: serverTimestamp()
+        await updateDoc(doc(getCollRef(COLLECTIONS.ARTICLES), editingId), {
+          title, category, image, content, updatedAt: serverTimestamp()
         });
         setMessage('Đã cập nhật bài viết!');
       } else {
         await addDoc(getCollRef(COLLECTIONS.ARTICLES), {
-          title, category, image, content,
-          author: getUserDisplayName(user),
-          authorId: user.uid,
-          createdAt: serverTimestamp()
+          title, category, image, content, author: getUserDisplayName(user), authorId: user.uid, createdAt: serverTimestamp()
         });
         setMessage('Đã đăng bài mới!');
       }
@@ -960,9 +870,7 @@ const AdminDashboard = ({ user, articles, products }) => {
 
   const handleDeleteArticle = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa bài này?")) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.ARTICLES, id));
-      } catch (err) { console.error(err); }
+      try { await deleteDoc(doc(getCollRef(COLLECTIONS.ARTICLES), id)); } catch (err) { console.error(err); }
     }
   };
 
@@ -978,14 +886,13 @@ const AdminDashboard = ({ user, articles, products }) => {
     e.preventDefault();
     try {
       if (editingProdId) {
-        await updateDoc(doc(db, COLLECTIONS.PRODUCTS, editingProdId), {
+        await updateDoc(doc(getCollRef(COLLECTIONS.PRODUCTS), editingProdId), {
           name: prodName, price: Number(prodPrice), type: prodType, description: prodDesc
         });
         setMessage("Đã cập nhật sản phẩm!");
       } else {
         await addDoc(getCollRef(COLLECTIONS.PRODUCTS), {
-          name: prodName, price: Number(prodPrice), type: prodType, description: prodDesc,
-          createdAt: serverTimestamp()
+          name: prodName, price: Number(prodPrice), type: prodType, description: prodDesc, createdAt: serverTimestamp()
         });
         setMessage("Đã thêm sản phẩm!");
       }
@@ -996,9 +903,7 @@ const AdminDashboard = ({ user, articles, products }) => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm("Xóa sản phẩm này?")) {
-      await deleteDoc(doc(db, COLLECTIONS.PRODUCTS, id));
-    }
+    if (window.confirm("Xóa sản phẩm này?")) { await deleteDoc(doc(getCollRef(COLLECTIONS.PRODUCTS), id)); }
   };
 
   return (
@@ -1025,7 +930,6 @@ const AdminDashboard = ({ user, articles, products }) => {
                 </h3>
                 {editingId && <button onClick={handleCancelEdit} className="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300">Hủy sửa</button>}
               </div>
-
               <form onSubmit={handleSubmitArticle} className="space-y-5 md:space-y-6">
                 <div>
                   <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Tiêu đề</label>
@@ -1052,7 +956,6 @@ const AdminDashboard = ({ user, articles, products }) => {
                 </button>
               </form>
             </div>
-
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h4 className="font-bold text-slate-700 mb-4">Danh sách bài viết ({articles.length})</h4>
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
@@ -1074,7 +977,6 @@ const AdminDashboard = ({ user, articles, products }) => {
               </div>
             </div>
           </div>
-
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:sticky lg:top-24">
               <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100"><PlusCircle className="text-amber-500" /> {editingProdId ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm'}</h3>
@@ -1094,7 +996,6 @@ const AdminDashboard = ({ user, articles, products }) => {
               </form>
               {message && <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{message}</div>}
             </div>
-
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h4 className="font-bold text-slate-700 mb-4">Danh sách sản phẩm ({products.length})</h4>
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
@@ -1119,6 +1020,7 @@ const AdminDashboard = ({ user, articles, products }) => {
   );
 };
 
+// --- Existing Navbar, ArticleCard, etc. (Keeping logic) ---
 const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
