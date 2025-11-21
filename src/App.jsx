@@ -345,7 +345,7 @@ const PaymentModal = ({ product, onClose, user, onSuccess }) => {
   const bankInfo = {
     bankId: 'mbbank',
     accountNo: '0394422547',
-    accountName: 'FM PRO ADMIN',
+    accountName: 'NGUYEN DUY TAN',
     template: 'compact'
   };
 
@@ -1085,8 +1085,8 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
               <Gamepad2 className="text-white w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg md:text-xl font-serif font-bold text-slate-900 tracking-wide leading-none">FM<span className="text-amber-500">BLOG</span></span>
-              <span className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-[0.2em] font-medium">Personal Journal</span>
+              <span className="text-lg md:text-xl font-serif font-bold text-slate-900 tracking-wide leading-none">FM<span className="text-amber-500">VPRO</span></span>
+              <span className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-[0.2em] font-medium">FM Journal</span>
             </div>
           </div>
 
@@ -1542,7 +1542,7 @@ export default function App() {
                   <div className="md:w-1/2 flex justify-center relative animate-in zoom-in duration-1000 mt-8 md:mt-0">
                     <div className="relative z-10 max-w-[80%] md:max-w-full">
                       <div className="absolute inset-0 bg-gradient-to-tr from-amber-200 to-transparent rounded-[2rem] rotate-6 transform translate-x-4 translate-y-4 -z-10"></div>
-                      <img src="https://placehold.co/500x600/f8fafc/cbd5e1?text=FM+Tactics+Board" alt="Hero" className="rounded-[2rem] shadow-2xl border-4 border-white" />
+                      <img src="https://scontent.fhan7-1.fna.fbcdn.net/v/t39.30808-6/548246122_1853079962258578_6581071402068987802_n.png?stp=dst-jpg_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2285d6&_nc_eui2=AeF9exUDdtuyIzMoN5Ic4_JqP3O2I-DjXOI_c7Yj4ONc4vQ1QaerIlZc4Gp82DdPbpQg_9ZWUMGauzQSWkrjI5ZN&_nc_ohc=tfLG_RKvv2oQ7kNvwFbkM6Y&_nc_oc=Admf0DQp6vrYg4cWbJBPRjaNOjoECcN-FRO1h11DdylESajXoTbgpOhHlvLDfoHtxGg&_nc_zt=23&_nc_ht=scontent.fhan7-1.fna&_nc_gid=W0XnI8G7x7VpXOTiqCMIwg&oh=00_AfjqoMt_OfFbyfYUs7_C0Jnn8GJ_t-8z61B6ZoBQBWNW1Q&oe=69266364" alt="Hero" className="rounded-[2rem] shadow-2xl border-4 border-white" />
                     </div>
                   </div>
                 </div>
