@@ -52,7 +52,7 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify, // Đã thêm import thiếu này
+  AlignJustify,
   Heading1,
   Heading2,
   Undo,
@@ -95,7 +95,7 @@ import {
   Phone
 } from 'lucide-react';
 
-// --- Firebase Setup (CHÍNH CHỦ - GIỮ NGUYÊN) ---
+// --- Firebase Setup (CHÍNH CHỦ) ---
 const firebaseConfig = {
   apiKey: "AIzaSyC1Egcu7ByRCb3ruOdRufTmxPq2rnBebEU",
   authDomain: "fmpro-c5f67.firebaseapp.com",
@@ -132,10 +132,10 @@ const CATEGORIES = {
 const MOCK_ARTICLES = [
   {
     id: 'mock-1',
-    title: 'Tin nóng: FM26 sẽ có tính năng AI mới?',
+    title: 'Hành trình đưa Wrexham lên đỉnh Premier League: Phần 1',
     category: 'News',
-    image: 'https://placehold.co/600x400/f8fafc/d97706?text=FM26+News',
-    content: '<p>Những rò rỉ mới nhất về phiên bản tiếp theo...</p>',
+    image: 'https://placehold.co/600x400/f8fafc/d97706?text=Wrexham+Story',
+    content: '<p>Hôm nay mình bắt đầu save game mới với Wrexham...</p>',
     author: 'Admin',
     createdAt: { seconds: Date.now() / 1000 }
   },
@@ -163,11 +163,13 @@ const MOCK_PRODUCTS = [
 
 const getCollRef = (colName) => collection(db, colName);
 
+// Cập nhật hàm lấy tên hiển thị: Ưu tiên displayName, không dùng email nữa
 const getUserDisplayName = (user) => {
   if (!user) return 'Khách';
+  // Nếu có tên hiển thị thì dùng, nếu không thì dùng mặc định "Thành viên" hoặc "Admin" nếu là email admin
   if (user.displayName) return user.displayName;
-  if (user.email) return user.email.split('@')[0];
-  return 'Bạn đọc';
+  if (user.email === ADMIN_EMAIL) return 'Admin';
+  return 'Thành viên FM';
 };
 
 const formatDateSafe = (timestamp) => {
@@ -1531,7 +1533,10 @@ export default function App() {
                       <button onClick={() => setView('store')} className="bg-slate-900 hover:bg-amber-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-bold transition-all shadow-xl shadow-slate-200 hover:shadow-amber-100 transform hover:-translate-y-1 flex items-center justify-center gap-2">
                         <ShoppingCart size={18} /> Ghé Cửa Hàng
                       </button>
-                      <button className="bg-white hover:bg-slate-50 text-slate-900 px-6 md:px-8 py-3 md:py-4 rounded-full font-bold transition border border-slate-200 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => document.getElementById('articles-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="bg-white hover:bg-slate-50 text-slate-900 px-6 md:px-8 py-3 md:py-4 rounded-full font-bold transition border border-slate-200 flex items-center justify-center gap-2"
+                      >
                         <BookOpen size={18} /> Đọc Blog
                       </button>
                     </div>
@@ -1546,13 +1551,20 @@ export default function App() {
               </div>
             )}
 
-            <div className="max-w-[1800px] mx-auto px-6 lg:px-10 mt-8">
+            <div id="articles-grid" className="max-w-[1800px] mx-auto px-6 lg:px-10 mt-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 md:mb-12 gap-4">
                 <div className="flex items-center gap-4">
                   <div className="h-8 md:h-12 w-1 bg-gradient-to-b from-amber-400 to-yellow-600 rounded-full"></div>
                   <h2 className="text-2xl md:text-4xl font-serif font-bold text-slate-900">{categoryFilter || "Bài Viết Mới Nhất"}</h2>
                 </div>
-                {!categoryFilter && <button className="text-amber-600 text-sm font-bold hover:text-amber-700 flex items-center gap-1 border-b-2 border-amber-100 hover:border-amber-600 pb-1 transition-all self-end sm:self-auto">Xem toàn bộ <span className="text-lg">&rarr;</span></button>}
+                {!categoryFilter && (
+                  <button
+                    onClick={() => document.getElementById('articles-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="text-amber-600 text-sm font-bold hover:text-amber-700 flex items-center gap-1 border-b-2 border-amber-100 hover:border-amber-600 pb-1 transition-all self-end sm:self-auto"
+                  >
+                    Xem toàn bộ <span className="text-lg">&rarr;</span>
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
