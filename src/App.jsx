@@ -94,19 +94,19 @@ import {
   Phone
 } from 'lucide-react';
 
-// --- Firebase Setup ---
-const firebaseConfig = typeof __firebase_config !== 'undefined'
-  ? JSON.parse(__firebase_config)
-  : {
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_AUTH_DOMAIN_HERE",
-    projectId: "YOUR_PROJECT_ID_HERE",
-    storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-    appId: "YOUR_APP_ID_HERE"
-  };
+// --- Firebase Setup (KHÔI PHỤC CẤU HÌNH CỦA BẠN) ---
+const firebaseConfig = {
+  apiKey: "AIzaSyC1Egcu7ByRCb3ruOdRufTmxPq2rnBebEU",
+  authDomain: "fmpro-c5f67.firebaseapp.com",
+  projectId: "fmpro-c5f67",
+  storageBucket: "fmpro-c5f67.firebasestorage.app",
+  messagingSenderId: "548693405398",
+  appId: "1:548693405398:web:67883c3c3972062d162377",
+  measurementId: "G-L87XVT5DMZ"
+};
 
 const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app); 
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -121,7 +121,7 @@ const COLLECTIONS = {
 };
 
 const CATEGORIES = {
-  NEWS: 'News', // Đổi tên thành News theo yêu cầu
+  NEWS: 'News',
   REVIEW: 'Review Cầu Thủ',
   DOWNLOAD: 'Kho Tài Nguyên',
   TIPS: 'Chiến Thuật & Tips'
@@ -160,13 +160,8 @@ const MOCK_PRODUCTS = [
   }
 ];
 
-const getCollRef = (colName) => {
-  const prefix = typeof __app_id !== 'undefined' ? `artifacts/${__app_id}/public/data/` : '';
-  if (prefix) {
-    return collection(db, 'artifacts', __app_id, 'public', 'data', colName);
-  }
-  return collection(db, colName);
-}
+// Sử dụng collection trực tiếp cho dự án riêng của bạn
+const getCollRef = (colName) => collection(db, colName);
 
 const getUserDisplayName = (user) => {
   if (!user) return 'Khách';
@@ -206,12 +201,12 @@ const DemoModeAlert = () => (
     </div>
     <div>
       <h4 className="font-bold text-sm">Chế độ Demo (Offline)</h4>
-      <p className="text-xs opacity-80">Đang hiển thị nội dung mẫu.</p>
+      <p className="text-xs opacity-80">Không kết nối được Firebase. Dữ liệu là mẫu.</p>
     </div>
   </div>
 );
 
-// PAGE: Contact Page (New)
+// PAGE: Contact Page
 const ContactPage = () => (
   <div className="max-w-4xl mx-auto py-16 px-4 animate-in fade-in duration-500">
     <div className="text-center mb-12">
@@ -249,7 +244,7 @@ const ContactPage = () => (
   </div>
 );
 
-// PAGE: Product Guide (Updated Content)
+// PAGE: Product Guide
 const ProductGuide = ({ onBack }) => (
   <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
     <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
@@ -1136,12 +1131,12 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
 
   const navItems = [
     { id: 'home', label: 'Trang Chủ', icon: <BookOpen size={18} />, action: () => { setView('home'); setCategoryFilter(null); } },
-    { id: 'news', label: 'News', icon: <BookOpen size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.NEWS); } }, // Use CATEGORIES.NEWS
+    { id: 'news', label: 'News', icon: <BookOpen size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.NEWS); } },
     { id: 'review', label: 'Review', icon: <User size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.REVIEW); } },
     { id: 'download', label: 'Download', icon: <Download size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.DOWNLOAD); } },
     { id: 'tips', label: 'Tips', icon: <Zap size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.TIPS); } },
     { id: 'store', label: 'Cửa Hàng', icon: <ShoppingCart size={18} />, action: () => { setView('store'); } },
-    { id: 'contact', label: 'Liên Hệ', icon: <Phone size={18} />, action: () => { setView('contact'); } }, // New Contact Tab
+    { id: 'contact', label: 'Liên Hệ', icon: <Phone size={18} />, action: () => { setView('contact'); } },
   ];
 
   const isActive = (item) => {
@@ -1376,6 +1371,141 @@ const ArticleDetail = ({ article, onBack, user }) => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Store = ({ user, isDemo, setView }) => {
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [storeLoading, setStoreLoading] = useState(false);
+
+  useEffect(() => {
+    setStoreLoading(true);
+    if (isDemo) { setProducts(MOCK_PRODUCTS); setStoreLoading(false); return; }
+
+    const q = query(getCollRef(COLLECTIONS.PRODUCTS));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const prods = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setProducts(prods);
+      setStoreLoading(false);
+      if (prods.length === 0 && user && user.uid) {
+        // Seeding logic omitted
+      }
+    }, (err) => {
+      setProducts(MOCK_PRODUCTS);
+      setStoreLoading(false);
+    });
+    return () => unsubscribe();
+  }, [user, isDemo]);
+
+  return (
+    <div className="max-w-[1800px] mx-auto py-10 md:py-16 px-6 lg:px-10">
+      {selectedProduct && (
+        <PaymentModal
+          product={selectedProduct}
+          user={user}
+          onClose={() => setSelectedProduct(null)}
+          onSuccess={() => setView('guide')}
+        />
+      )}
+
+      <div className="text-center mb-12 md:mb-20 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-amber-100 blur-[60px] rounded-full -z-10 opacity-50"></div>
+        <span className="text-amber-600 font-bold tracking-[0.3em] text-xs uppercase mb-3 block">Premium Store</span>
+        <h2 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 mb-4 md:mb-6">Cửa Hàng Độc Quyền</h2>
+        <p className="text-slate-500 max-w-xl mx-auto text-base md:text-lg font-light px-2">Nâng cấp trải nghiệm quản lý bóng đá của bạn với các công cụ và dữ liệu được chọn lọc kỹ càng.</p>
+      </div>
+
+      {storeLoading ? (
+        <div className="text-center text-amber-500 font-serif italic">Đang tải bộ sưu tập...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {products.map(product => (
+            <div key={product.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-amber-300 transition-all duration-500 group hover:-translate-y-2 shadow-sm hover:shadow-2xl hover:shadow-amber-100/50 flex flex-col">
+              <div className="h-48 md:h-56 p-6 md:p-8 bg-slate-50 flex items-center justify-center relative group-hover:bg-white transition-colors">
+                <div className="absolute inset-0 border-b border-slate-100"></div>
+                {product.image && product.image.startsWith('http') ? (
+                  <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-500 z-10" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Product' }} />
+                ) : (
+                  <Crown className="text-amber-400 w-16 h-16 md:w-20 md:h-20 group-hover:text-amber-500 transition-colors z-10" />
+                )}
+                <div className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider z-20 bg-white shadow-sm border border-slate-100 text-slate-500`}>
+                  {product.type === 'game' ? 'KEY' : 'MOD'}
+                </div>
+              </div>
+              <div className="p-5 md:p-6 flex-1 flex flex-col text-center">
+                <h3 className="text-base md:text-lg font-serif font-bold text-slate-900 mb-2 line-clamp-2">{product.name}</h3>
+                <p className="text-slate-500 text-xs md:text-sm mb-4 md:mb-6 flex-1 line-clamp-2 font-light">{product.description}</p>
+                <div className="mt-auto">
+                  <div className="text-xl md:text-2xl font-bold text-slate-900 mb-3 md:mb-4">{parseInt(product.price).toLocaleString('vi-VN')} <span className="text-sm text-slate-400 font-normal align-top">đ</span></div>
+                  <button onClick={() => setSelectedProduct(product)} className="w-full bg-slate-900 hover:bg-amber-600 text-white py-2.5 md:py-3 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-slate-200 group-hover:shadow-amber-200 flex items-center justify-center gap-2 active:scale-95">
+                    <CreditCard size={16} /> Mua Ngay
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AuthModal = ({ setView, onLoginSuccess }) => {
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); setError('');
+    try {
+      let userCred;
+      if (isRegister) {
+        userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCred.user, { displayName: name });
+      } else {
+        userCred = await signInWithEmailAndPassword(auth, email, password);
+      }
+      onLoginSuccess();
+    } catch (err) { setError(err.message); }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-[80vh] p-4">
+      <div className="bg-white p-6 md:p-10 rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 w-full max-w-md relative">
+        <button onClick={() => setView('home')} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 p-2"><X size={20} /></button>
+        <div className="text-center mb-6 md:mb-8">
+          <div className="inline-block p-3 bg-amber-50 rounded-full mb-4"><User size={28} className="text-amber-600" /></div>
+          <h2 className="text-xl md:text-2xl font-serif font-bold text-slate-900">{isRegister ? 'Đăng Ký Thành Viên' : 'Chào Mừng Trở Lại'}</h2>
+          <p className="text-slate-500 text-xs md:text-sm mt-2">Tham gia cộng đồng FM Blog Việt Nam</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          {isRegister && (
+            <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:bg-white focus:border-amber-500 outline-none transition placeholder:text-slate-400" placeholder="Tên hiển thị của bạn" />
+          )}
+          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:bg-white focus:border-amber-500 outline-none transition placeholder:text-slate-400" placeholder="Email" />
+          <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:bg-white focus:border-amber-500 outline-none transition placeholder:text-slate-400" placeholder="Mật khẩu" />
+
+          {error && <p className="text-red-500 text-xs md:text-sm text-center bg-red-50 p-2 rounded-lg">{error}</p>}
+
+          <button type="submit" className="w-full bg-slate-900 hover:bg-amber-600 text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg transition-all shadow-lg shadow-slate-200 active:scale-95">
+            {isRegister ? 'Tạo Tài Khoản' : 'Đăng Nhập'}
+          </button>
+        </form>
+
+        <div className="mt-6 md:mt-8 text-center">
+          <button onClick={() => setIsRegister(!isRegister)} className="text-slate-500 hover:text-amber-600 text-sm font-medium transition">
+            {isRegister ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay'}
+          </button>
+        </div>
+        <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+          <p className="text-[10px] md:text-xs text-slate-400">Tài khoản Admin Demo: {ADMIN_EMAIL}</p>
         </div>
       </div>
     </div>
