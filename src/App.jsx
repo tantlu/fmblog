@@ -9,7 +9,8 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -74,28 +75,31 @@ import {
   MessageCircle,
   Send,
   MoreHorizontal,
-  Bell
+  Bell,
+  Camera,
+  Mail,
+  Lock,
+  Save
 } from 'lucide-react';
 
-// --- Firebase Setup (Cấu hình của bạn) ---
-const firebaseConfig = {
-  apiKey: "AIzaSyC1Egcu7ByRCb3ruOdRufTmxPq2rnBebEU",
-  authDomain: "fmpro-c5f67.firebaseapp.com",
-  projectId: "fmpro-c5f67",
-  storageBucket: "fmpro-c5f67.firebasestorage.app",
-  messagingSenderId: "548693405398",
-  appId: "1:548693405398:web:67883c3c3972062d162377",
-  measurementId: "G-L87XVT5DMZ"
-};
+// --- Firebase Setup ---
+const firebaseConfig = typeof __firebase_config !== 'undefined' 
+  ? JSON.parse(__firebase_config) 
+  : {
+      apiKey: "YOUR_API_KEY_HERE",
+      authDomain: "YOUR_AUTH_DOMAIN_HERE",
+      projectId: "YOUR_PROJECT_ID_HERE",
+      storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+      appId: "YOUR_APP_ID_HERE"
+    };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app); 
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 // --- Utilities ---
-const ADMIN_EMAIL = 'nguyentan7799@gmail.com'; // Tài khoản Admin
+const ADMIN_EMAIL = 'nguyentan7799@gmail.com'; 
 
 const COLLECTIONS = {
   ARTICLES: 'articles',
@@ -130,15 +134,6 @@ const MOCK_ARTICLES = [
     content: '<p>Đánh giá chi tiết về chỉ số và màn trình diễn...</p>',
     author: 'Admin',
     createdAt: { seconds: Date.now() / 1000 - 86400 }
-  },
-  {
-    id: 'mock-3',
-    title: 'Bộ Skin Gold Luxury độc quyền cho FM24',
-    category: 'Kho Tài Nguyên',
-    image: 'https://placehold.co/600x400/1e293b/fcd34d?text=Gold+Skin',
-    content: '<p>Chia sẻ skin mình tự edit mang phong cách sang trọng...</p>',
-    author: 'Admin',
-    createdAt: { seconds: Date.now() / 1000 - 172800 }
   }
 ];
 
@@ -150,18 +145,16 @@ const MOCK_PRODUCTS = [
     type: "game",
     description: "Tài khoản Steam chính chủ, chơi offline vĩnh viễn, update liên tục.",
     image: "https://placehold.co/400x400/fef3c7/d97706?text=FM26+VIP",
-  },
-  {
-    id: 'mock-p2',
-    name: "Gói Mod Đồ Họa Ultimate",
-    price: 50000,
-    type: "mod",
-    description: "Full Logo, Face, Kits chất lượng 4K, cài đặt qua UltraViewer.",
-    image: "https://placehold.co/400x400/fff7ed/c2410c?text=Ultimate+Graphics",
   }
 ];
 
-const getCollRef = (colName) => collection(db, colName);
+const getCollRef = (colName) => {
+    const prefix = typeof __app_id !== 'undefined' ? `artifacts/${__app_id}/public/data/` : '';
+    if (prefix) {
+        return collection(db, 'artifacts', __app_id, 'public', 'data', colName);
+    }
+    return collection(db, colName);
+}
 
 const getUserDisplayName = (user) => {
   if (!user) return 'Khách';
@@ -172,7 +165,6 @@ const getUserDisplayName = (user) => {
 
 // --- Components ---
 
-// 0. Demo Mode Notification
 const DemoModeAlert = () => (
   <div className="fixed bottom-4 right-4 z-[200] w-[90%] max-w-sm md:w-auto bg-white/90 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in slide-in-from-bottom-5 mx-auto md:mx-0">
     <div className="bg-amber-100 p-2 rounded-full shrink-0">
@@ -185,7 +177,6 @@ const DemoModeAlert = () => (
   </div>
 );
 
-// NEW COMPONENT: Product Guide
 const ProductGuide = ({ onBack }) => (
   <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
     <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
@@ -200,7 +191,6 @@ const ProductGuide = ({ onBack }) => (
       </div>
 
       <div className="p-6 md:p-10 space-y-8 text-slate-700">
-        {/* Section 1 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
@@ -211,74 +201,9 @@ const ProductGuide = ({ onBack }) => (
             <li>Đây là hình thức <strong>Share Steam Offline</strong> (chơi ở chế độ ngoại tuyến).</li>
             <li>File save game được lưu riêng trên máy tính của bạn, hoàn toàn bảo mật.</li>
             <li className="text-red-600 font-bold bg-red-50 p-2 rounded-lg">Tuyệt đối không thay đổi email hay mật khẩu của tài khoản được cấp.</li>
-            <li className="italic text-slate-500">Lưu ý: Gói này không hỗ trợ chơi tại tiệm nét hoặc qua các dịch vụ Cloud PC.</li>
           </ul>
         </section>
-
-        {/* Section 2 */}
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
-            Sau khi đã cài đặt xong
-          </h3>
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm md:text-base">
-            <p className="flex items-start gap-2"><AlertTriangle className="text-amber-500 shrink-0 mt-1" size={18}/> <strong>KHÔNG nhấn "Go Online"</strong> hoặc thay đổi nick khác trên Steam.</p>
-            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>. (Nếu bật Steam thấy chữ "Installing..." thì cứ để bình thường).</p>
-            <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
-          </div>
-        </section>
-
-        {/* Section 3 */}
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
-            Khi Steam yêu cầu "Go Online" để chơi tiếp
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="border border-slate-200 p-4 rounded-xl">
-              <h4 className="font-bold mb-2 text-slate-900">Bước 1:</h4>
-              <p className="text-sm text-slate-600">Vui lòng tự kiểm tra và Update Windows, driver card màn hình và các driver khác trong máy tính của bạn lên bản mới nhất.</p>
-            </div>
-            <div className="border border-slate-200 p-4 rounded-xl">
-              <h4 className="font-bold mb-2 text-slate-900">Bước 2:</h4>
-              <p className="text-sm text-slate-600">Hãy <strong>Inbox cho Page</strong> để được hỗ trợ sửa lỗi.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 4 */}
-        <section>
-          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
-            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
-            Một vài lưu ý khác
-          </h3>
-          <div className="space-y-4 text-sm md:text-base">
-            <div>
-              <strong className="block text-slate-900 mb-1">Bạn đã có nick Steam khác?</strong>
-              <p>Bạn vẫn share offline được, nhưng cần tuân thủ đúng các bước hướng dẫn. Page sẵn sàng hỗ trợ nếu bị văng nick hoặc lỗi "Go Online", nhưng sẽ <strong>hạn chế hỗ trợ</strong> nếu bạn tự ý đổi nick qua lại để chơi game khác.</p>
-            </div>
-            <div>
-              <strong className="block text-slate-900 mb-1 flex items-center gap-2"><Info size={16}/> Phạm vi hỗ trợ:</strong>
-              <p>Page chỉ hỗ trợ các vấn đề liên quan đến cài đặt và kích hoạt game. Các vấn đề về gameplay, chiến thuật... vui lòng tham gia group cộng đồng: <a href="https://www.facebook.com/groups/fmvnofficial" target="_blank" rel="noreferrer" className="text-blue-600 underline">FMVN Official</a></p>
-            </div>
-            <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
-               <div className="flex-1 bg-amber-50 p-3 rounded-lg flex gap-3 items-start">
-                  <Clock className="text-amber-600 shrink-0" size={20}/>
-                  <div>
-                    <strong className="block text-amber-800 text-sm">Giờ hỗ trợ</strong>
-                    <p className="text-xs text-amber-700 mt-1">Tránh nhắn tin sau 11h đêm.</p>
-                  </div>
-               </div>
-               <div className="flex-1 bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
-                  <Clock className="text-blue-600 shrink-0" size={20}/>
-                  <div>
-                    <strong className="block text-blue-800 text-sm">Thời gian chờ</strong>
-                    <p className="text-xs text-blue-700 mt-1">Nếu quá tải, vui lòng đợi 12 - 48 giờ.</p>
-                  </div>
-               </div>
-            </div>
-          </div>
-        </section>
+        {/* More sections can be added here */}
       </div>
 
       <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
@@ -290,16 +215,70 @@ const ProductGuide = ({ onBack }) => (
   </div>
 );
 
-// --- Chat Components ---
+const PaymentModal = ({ product, onClose, user, onSuccess }) => {
+  const bankInfo = {
+    bankId: 'mbbank',
+    accountNo: '0394422547',
+    accountName: 'FM PRO ADMIN',
+    template: 'compact'
+  };
 
-// 1. Chat Widget (User Side)
+  const userName = getUserDisplayName(user);
+  const memo = `BLOG ${userName} mua ${product.name}`.replace(/[^a-zA-Z0-9 ]/g, "");
+  const qrUrl = `https://img.vietqr.io/image/${bankInfo.bankId}-${bankInfo.accountNo}-${bankInfo.template}.png?amount=${product.price}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(bankInfo.accountName)}`;
+
+  const handleConfirmPayment = () => {
+    onClose();
+    onSuccess();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white border border-amber-100 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-6 bg-gradient-to-br from-amber-50 to-white">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+               <h3 className="text-xl font-bold text-slate-800 font-serif">Thanh toán</h3>
+               <p className="text-amber-600 text-sm mt-1 font-medium line-clamp-1">{product.name}</p>
+            </div>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-800 p-1"><X size={24} /></button>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl mb-6 flex justify-center border border-slate-100 shadow-inner">
+             <img src={qrUrl} alt="QR Code Payment" className="w-full max-w-[280px] object-contain rounded-lg" />
+          </div>
+
+          <div className="space-y-3 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200">
+             <div className="flex justify-between">
+                <span>Ngân hàng:</span>
+                <span className="font-bold text-slate-800">MB Bank</span>
+             </div>
+             <div className="flex justify-between">
+                <span>Số tiền:</span>
+                <span className="font-bold text-slate-900 text-lg">{product.price.toLocaleString('vi-VN')} đ</span>
+             </div>
+             <div className="flex justify-between items-start gap-2">
+                <span className="shrink-0">Nội dung:</span>
+                <span className="font-mono text-xs text-right text-slate-500 break-all">{memo}</span>
+             </div>
+          </div>
+
+          <button onClick={handleConfirmPayment} className="w-full mt-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2 active:scale-95">
+             <CheckCircle size={20} /> Xác nhận thanh toán
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ChatWidget = ({ user, isDemo }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [chatId, setChatId] = useState(null);
+  const chatContainerRef = useRef(null);
   
-  // Xác định ID chat: Dùng uid nếu đăng nhập, hoặc localStorage nếu khách
   useEffect(() => {
     if (user) {
       setChatId(user.uid);
@@ -313,11 +292,12 @@ const ChatWidget = ({ user, isDemo }) => {
     }
   }, [user]);
 
-  // Lắng nghe tin nhắn
   useEffect(() => {
     if (!chatId || isDemo) return;
     
-    const chatDocRef = doc(db, COLLECTIONS.CHATS, chatId);
+    const chatsColRef = getCollRef(COLLECTIONS.CHATS);
+    const chatDocRef = doc(chatsColRef, chatId);
+
     const unsubscribe = onSnapshot(chatDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setMessages(docSnap.data().messages || []);
@@ -325,6 +305,12 @@ const ChatWidget = ({ user, isDemo }) => {
     });
     return () => unsubscribe();
   }, [chatId, isDemo]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, isOpen]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -336,9 +322,10 @@ const ChatWidget = ({ user, isDemo }) => {
       timestamp: Date.now()
     };
 
-    const chatDocRef = doc(db, COLLECTIONS.CHATS, chatId);
+    const chatsColRef = getCollRef(COLLECTIONS.CHATS);
+    const chatDocRef = doc(chatsColRef, chatId);
     const currentHour = new Date().getHours();
-    const isOfflineHours = currentHour >= 22 || currentHour < 8; // 22h đêm - 8h sáng
+    const isOfflineHours = currentHour >= 22 || currentHour < 8; 
 
     try {
       const docSnap = await getDoc(chatDocRef);
@@ -350,7 +337,7 @@ const ChatWidget = ({ user, isDemo }) => {
           messages: updatedMessages,
           lastMessage: inputText,
           lastMessageTime: serverTimestamp(),
-          unreadAdmin: true, // Báo admin có tin mới
+          unreadAdmin: true, 
           userName: user ? getUserDisplayName(user) : 'Khách ghé thăm'
         });
       } else {
@@ -366,17 +353,20 @@ const ChatWidget = ({ user, isDemo }) => {
         });
       }
 
-      // Auto reply if offline hours
       if (isOfflineHours) {
         const autoReply = {
           text: "Chào bạn, hiện tại Admin đang offline. Chúng tôi sẽ phản hồi bạn vào lúc 8h sáng mai. Cảm ơn bạn đã nhắn tin!",
           sender: 'system',
-          timestamp: Date.now() + 100 // slight delay
+          timestamp: Date.now() + 100 
         };
         setTimeout(async () => {
-             await updateDoc(chatDocRef, {
-                messages: [...updatedMessages, autoReply]
-             });
+             const snap = await getDoc(chatDocRef);
+             if(snap.exists()){
+                 const currentMsgs = snap.data().messages;
+                 await updateDoc(chatDocRef, {
+                    messages: [...currentMsgs, autoReply]
+                 });
+             }
         }, 1000);
       }
 
@@ -386,18 +376,10 @@ const ChatWidget = ({ user, isDemo }) => {
     }
   };
 
-  const chatContainerRef = useRef(null);
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages, isOpen]);
-
-  if (user?.email === ADMIN_EMAIL) return null; // Admin không cần widget chat với chính mình
+  if (user?.email === ADMIN_EMAIL) return null; 
 
   return (
     <>
-      {/* Chat Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[150] bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-amber-600 transition-all transform hover:scale-110 flex items-center justify-center"
@@ -405,10 +387,8 @@ const ChatWidget = ({ user, isDemo }) => {
         {isOpen ? <X size={24}/> : <MessageCircle size={24} className="animate-pulse"/>}
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
         <div className="fixed bottom-20 right-4 md:right-6 z-[150] w-[90vw] max-w-[350px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col h-[450px] animate-in slide-in-from-bottom-10 fade-in">
-          {/* Header */}
           <div className="bg-slate-900 p-4 text-white flex items-center justify-between">
              <div className="flex items-center gap-2">
                 <div className="bg-green-500 w-2 h-2 rounded-full"></div>
@@ -417,7 +397,6 @@ const ChatWidget = ({ user, isDemo }) => {
              <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white"><X size={18}/></button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 bg-slate-50 p-4 overflow-y-auto space-y-3" ref={chatContainerRef}>
              {messages.length === 0 && (
                 <div className="text-center text-slate-400 text-sm mt-10">
@@ -439,7 +418,6 @@ const ChatWidget = ({ user, isDemo }) => {
              ))}
           </div>
 
-          {/* Input */}
           <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-100 flex gap-2">
              <input 
                 value={inputText}
@@ -458,16 +436,14 @@ const ChatWidget = ({ user, isDemo }) => {
   );
 };
 
-// 2. Admin Chat Panel
 const AdminChatPanel = () => {
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [replyText, setReplyText] = useState('');
   const messagesEndRef = useRef(null);
 
-  // Load danh sách chat
   useEffect(() => {
-    const q = query(collection(db, COLLECTIONS.CHATS), orderBy('lastMessageTime', 'desc'));
+    const q = query(getCollRef(COLLECTIONS.CHATS), orderBy('lastMessageTime', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const chatList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setChats(chatList);
@@ -475,7 +451,6 @@ const AdminChatPanel = () => {
     return () => unsubscribe();
   }, []);
 
-  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedChat, chats]);
@@ -483,7 +458,8 @@ const AdminChatPanel = () => {
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
     if (chat.unreadAdmin) {
-        await updateDoc(doc(db, COLLECTIONS.CHATS, chat.id), {
+        const chatsColRef = getCollRef(COLLECTIONS.CHATS);
+        await updateDoc(doc(chatsColRef, chat.id), {
             unreadAdmin: false
         });
     }
@@ -500,7 +476,8 @@ const AdminChatPanel = () => {
     };
 
     try {
-        const chatRef = doc(db, COLLECTIONS.CHATS, selectedChat.id);
+        const chatsColRef = getCollRef(COLLECTIONS.CHATS);
+        const chatRef = doc(chatsColRef, selectedChat.id);
         const updatedMsgs = [...selectedChat.messages, newMsg];
         await updateDoc(chatRef, {
             messages: updatedMsgs,
@@ -515,7 +492,6 @@ const AdminChatPanel = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Sidebar List */}
         <div className="col-span-1 border-r border-slate-100 bg-slate-50 overflow-y-auto">
             <div className="p-4 border-b border-slate-200 font-bold text-slate-700 flex items-center justify-between">
                 <span>Danh sách hội thoại</span>
@@ -537,7 +513,6 @@ const AdminChatPanel = () => {
             {chats.length === 0 && <div className="p-4 text-center text-slate-400 text-sm">Chưa có tin nhắn nào</div>}
         </div>
 
-        {/* Chat Content */}
         <div className="col-span-1 md:col-span-2 flex flex-col bg-white">
             {selectedChat ? (
                 <>
@@ -588,73 +563,116 @@ const AdminChatPanel = () => {
   );
 };
 
-// 1. Payment Modal (QR Code - Gold Theme)
-const PaymentModal = ({ product, onClose, user, onSuccess }) => {
-  const bankInfo = {
-    bankId: 'mbbank',
-    accountNo: '0394422547',
-    accountName: 'FM PRO ADMIN',
-    template: 'compact'
+const ProfilePage = ({ user, onBack }) => {
+  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [photoURL, setPhotoURL] = useState(user?.photoURL || '');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setError('');
+    try {
+      await updateProfile(user, {
+        displayName: displayName,
+        photoURL: photoURL
+      });
+      setMessage('Cập nhật thông tin thành công!');
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  const userName = getUserDisplayName(user);
-  const memo = `BLOG ${userName} mua ${product.name}`.replace(/[^a-zA-Z0-9 ]/g, "");
-  const qrUrl = `https://img.vietqr.io/image/${bankInfo.bankId}-${bankInfo.accountNo}-${bankInfo.template}.png?amount=${product.price}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(bankInfo.accountName)}`;
-
-  const handleConfirmPayment = () => {
-    // Logic xử lý xác nhận (nếu có backend)
-    onClose();
-    onSuccess(); // Chuyển hướng sang trang Hướng dẫn
+  const handleResetPassword = async () => {
+    if (!user?.email) return;
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      setMessage(`Đã gửi email đặt lại mật khẩu tới ${user.email}`);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white border border-amber-100 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 bg-gradient-to-br from-amber-50 to-white">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-               <h3 className="text-xl font-bold text-slate-800 font-serif">Thanh toán</h3>
-               <p className="text-amber-600 text-sm mt-1 font-medium line-clamp-1">{product.name}</p>
-            </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-800 p-1"><X size={24} /></button>
-          </div>
+    <div className="max-w-2xl mx-auto py-12 px-4 animate-in fade-in duration-500">
+      <div className="mb-8 flex items-center gap-2">
+        <button onClick={onBack} className="text-slate-500 hover:text-slate-900 flex items-center gap-1 text-sm font-bold">
+            &larr; Quay lại
+        </button>
+      </div>
 
-          <div className="bg-white p-4 rounded-xl mb-6 flex justify-center border border-slate-100 shadow-inner">
-             <img src={qrUrl} alt="QR Code Payment" className="w-full max-w-[280px] object-contain rounded-lg" />
-          </div>
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-white text-center relative">
+           <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
+               <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500 rounded-full blur-3xl"></div>
+           </div>
+           <div className="relative z-10">
+               <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 p-1 flex items-center justify-center overflow-hidden shadow-lg">
+                   {photoURL ? (
+                       <img src={photoURL} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                   ) : (
+                       <User size={48} className="text-slate-300" />
+                   )}
+               </div>
+               <h1 className="text-2xl font-serif font-bold">{user?.displayName || 'Chưa đặt tên'}</h1>
+               <p className="text-slate-400 text-sm">{user?.email}</p>
+               {user?.email === ADMIN_EMAIL && <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2">ADMIN</span>}
+           </div>
+        </div>
 
-          <div className="space-y-3 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200">
-             <div className="flex justify-between">
-                <span>Ngân hàng:</span>
-                <span className="font-bold text-slate-800">MB Bank</span>
-             </div>
-             <div className="flex justify-between flex-wrap gap-2">
-                <span>Số tài khoản:</span>
-                <div className="flex items-center gap-2">
-                   <span className="font-bold text-amber-600 tracking-wider font-mono text-lg">0394422547</span>
-                   <button onClick={() => navigator.clipboard.writeText('0394422547')} title="Copy" className="text-slate-400 hover:text-amber-600"><Copy size={14}/></button>
+        <div className="p-8">
+            {message && <div className="mb-6 p-3 bg-green-50 text-green-700 text-sm rounded-lg flex items-center gap-2"><CheckCircle size={16}/> {message}</div>}
+            {error && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-center gap-2"><AlertTriangle size={16}/> {error}</div>}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-6">
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Tên hiển thị</label>
+                    <div className="relative">
+                        <User className="absolute left-3 top-3 text-slate-400" size={18} />
+                        <input 
+                            type="text" 
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition"
+                            placeholder="Nhập tên của bạn"
+                        />
+                    </div>
                 </div>
-             </div>
-             <div className="flex justify-between">
-                <span>Số tiền:</span>
-                <span className="font-bold text-slate-900 text-lg">{product.price.toLocaleString('vi-VN')} đ</span>
-             </div>
-             <div className="flex justify-between items-start gap-2">
-                <span className="shrink-0">Nội dung:</span>
-                <span className="font-mono text-xs text-right text-slate-500 break-all">{memo}</span>
-             </div>
-          </div>
 
-          <button onClick={handleConfirmPayment} className="w-full mt-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2 active:scale-95">
-             <CheckCircle size={20} /> Xác nhận thanh toán
-          </button>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Avatar (Link ảnh)</label>
+                    <div className="relative">
+                        <Camera className="absolute left-3 top-3 text-slate-400" size={18} />
+                        <input 
+                            type="text" 
+                            value={photoURL}
+                            onChange={(e) => setPhotoURL(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition"
+                            placeholder="https://example.com/avatar.jpg"
+                        />
+                    </div>
+                </div>
+
+                <div className="pt-4 flex flex-col gap-4">
+                    <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-amber-600 transition shadow-lg flex items-center justify-center gap-2">
+                        <Save size={18} /> Lưu Thay Đổi
+                    </button>
+                    
+                    <div className="border-t border-slate-100 pt-4 mt-2">
+                        <h4 className="text-sm font-bold text-slate-700 mb-3">Bảo mật</h4>
+                        <button type="button" onClick={handleResetPassword} className="w-full border border-slate-200 text-slate-600 py-2.5 rounded-xl font-medium hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                            <Lock size={16} /> Đổi mật khẩu (Gửi Email)
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
       </div>
     </div>
   );
 };
 
-// 2. Rich Text Editor (Pro Version - Responsive)
 const RichTextEditor = ({ value, onChange }) => {
   const editorRef = useRef(null);
 
@@ -662,7 +680,7 @@ const RichTextEditor = ({ value, onChange }) => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value;
     }
-  }, []); 
+  }, [value]); 
 
   const execCmd = (command, val = null) => {
     document.execCommand(command, false, val);
@@ -685,7 +703,6 @@ const RichTextEditor = ({ value, onChange }) => {
     if (url) execCmd('createLink', url);
   };
 
-  // Button component
   const ToolBtn = ({ onClick, icon: Icon, title }) => (
     <button type="button" onClick={onClick} className="p-2 hover:bg-slate-200 rounded text-slate-600 transition hover:text-amber-600 shrink-0" title={title}>
       <Icon size={18} />
@@ -694,7 +711,6 @@ const RichTextEditor = ({ value, onChange }) => {
 
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col h-[400px] md:h-[500px]">
-      {/* Responsive Toolbar: Flex wrap allows buttons to flow to next line on mobile */}
       <div className="flex flex-wrap gap-1 p-2 bg-slate-50 border-b border-slate-200 overflow-x-auto">
         <div className="flex gap-0.5 border-r border-slate-200 pr-2 mr-2 mb-1">
             <ToolBtn onClick={() => execCmd('bold')} icon={Bold} title="In đậm" />
@@ -704,14 +720,6 @@ const RichTextEditor = ({ value, onChange }) => {
         <div className="flex gap-0.5 border-r border-slate-200 pr-2 mr-2 mb-1">
             <ToolBtn onClick={() => execCmd('formatBlock', 'H2')} icon={Heading1} title="Tiêu đề lớn" />
             <ToolBtn onClick={() => execCmd('formatBlock', 'H3')} icon={Heading2} title="Tiêu đề nhỏ" />
-        </div>
-        <div className="flex gap-0.5 border-r border-slate-200 pr-2 mr-2 mb-1">
-            <ToolBtn onClick={() => execCmd('justifyLeft')} icon={AlignLeft} title="Căn trái" />
-            <ToolBtn onClick={() => execCmd('justifyCenter')} icon={AlignCenter} title="Căn giữa" />
-        </div>
-        <div className="flex gap-0.5 border-r border-slate-200 pr-2 mr-2 mb-1">
-            <ToolBtn onClick={() => execCmd('insertUnorderedList')} icon={List} title="Danh sách chấm" />
-            <ToolBtn onClick={() => execCmd('insertOrderedList')} icon={ListOrdered} title="Danh sách số" />
         </div>
         <div className="flex gap-0.5 mb-1">
             <ToolBtn onClick={addLink} icon={LinkIcon} title="Chèn Link" />
@@ -730,19 +738,234 @@ const RichTextEditor = ({ value, onChange }) => {
   );
 };
 
-// 3. Navbar (Full Width - Luxury)
+const AdminDashboard = ({ user, articles, products }) => {
+  const [activeTab, setActiveTab] = useState('articles');
+  
+  const [editingId, setEditingId] = useState(null); 
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState(CATEGORIES.NEWS);
+  const [image, setImage] = useState('');
+  const [content, setContent] = useState('');
+  const [message, setMessage] = useState('');
+
+  const [editingProdId, setEditingProdId] = useState(null);
+  const [prodName, setProdName] = useState('');
+  const [prodPrice, setProdPrice] = useState('');
+  const [prodType, setProdType] = useState('mod');
+  const [prodDesc, setProdDesc] = useState('');
+
+  const handleEditArticle = (article) => {
+    setEditingId(article.id);
+    setTitle(article.title);
+    setCategory(article.category);
+    setImage(article.image);
+    setContent(article.content);
+    window.scrollTo(0, 0); 
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTitle('');
+    setImage('');
+    setContent('');
+    setCategory(CATEGORIES.NEWS);
+  };
+
+  const handleSubmitArticle = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await updateDoc(doc(db, COLLECTIONS.ARTICLES, editingId), {
+            title, category, image, content,
+            updatedAt: serverTimestamp()
+        });
+        setMessage('Đã cập nhật bài viết!');
+      } else {
+        await addDoc(getCollRef(COLLECTIONS.ARTICLES), {
+            title, category, image, content,
+            author: getUserDisplayName(user),
+            authorId: user.uid,
+            createdAt: serverTimestamp()
+        });
+        setMessage('Đã đăng bài mới!');
+      }
+      handleCancelEdit();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setMessage('Lỗi: ' + err.message);
+    }
+  };
+
+  const handleDeleteArticle = async (id) => {
+      if (window.confirm("Bạn có chắc chắn muốn xóa bài này?")) {
+          try {
+              await deleteDoc(doc(db, COLLECTIONS.ARTICLES, id));
+          } catch (err) { console.error(err); }
+      }
+  };
+
+  const handleEditProduct = (prod) => {
+      setEditingProdId(prod.id);
+      setProdName(prod.name);
+      setProdPrice(prod.price);
+      setProdType(prod.type);
+      setProdDesc(prod.description);
+  };
+
+  const handleSubmitProduct = async (e) => {
+    e.preventDefault();
+    try {
+        if (editingProdId) {
+            await updateDoc(doc(db, COLLECTIONS.PRODUCTS, editingProdId), {
+                name: prodName, price: Number(prodPrice), type: prodType, description: prodDesc
+            });
+            setMessage("Đã cập nhật sản phẩm!");
+        } else {
+            await addDoc(getCollRef(COLLECTIONS.PRODUCTS), {
+                name: prodName, price: Number(prodPrice), type: prodType, description: prodDesc,
+                createdAt: serverTimestamp()
+            });
+            setMessage("Đã thêm sản phẩm!");
+        }
+        setEditingProdId(null);
+        setProdName(''); setProdPrice(''); setProdDesc('');
+        setTimeout(() => setMessage(''), 3000);
+    } catch (err) { setMessage('Lỗi thêm sp'); }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (window.confirm("Xóa sản phẩm này?")) {
+        await deleteDoc(doc(db, COLLECTIONS.PRODUCTS, id));
+    }
+  };
+
+  return (
+    <div className="max-w-[1600px] mx-auto py-8 md:py-12 px-4 lg:px-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900">Quản Trị Blog</h1>
+        <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setActiveTab('articles')} className={`px-4 py-2 rounded-full text-sm font-bold transition ${activeTab === 'articles' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Bài viết & SP</button>
+            <button onClick={() => setActiveTab('chat')} className={`px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 ${activeTab === 'chat' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                <MessageSquare size={16}/> Hỗ trợ
+            </button>
+        </div>
+      </div>
+
+      {activeTab === 'chat' ? (
+          <AdminChatPanel />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+            <div className="lg:col-span-2 space-y-8">
+                <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                        <h3 className="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <Edit3 className="text-amber-500"/> {editingId ? 'Sửa Bài Viết' : 'Viết Bài Mới'}
+                        </h3>
+                        {editingId && <button onClick={handleCancelEdit} className="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300">Hủy sửa</button>}
+                    </div>
+                    
+                    <form onSubmit={handleSubmitArticle} className="space-y-5 md:space-y-6">
+                        <div>
+                            <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Tiêu đề</label>
+                            <input required value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition font-serif text-base" placeholder="Tiêu đề bài viết..." />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                            <div>
+                                <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Chuyên mục</label>
+                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-amber-500">
+                                {Object.values(CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Ảnh Cover (URL)</label>
+                                <input value={image} onChange={e => setImage(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-amber-500" placeholder="https://..." />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Nội dung</label>
+                            <RichTextEditor value={content} onChange={setContent} />
+                        </div>
+                        <button type="submit" className={`w-full text-white py-3 rounded-xl font-bold shadow-lg transition-all ${editingId ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-900 hover:bg-amber-600'}`}>
+                            {editingId ? 'Cập Nhật Bài Viết' : 'Xuất Bản Bài Viết'}
+                        </button>
+                    </form>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 className="font-bold text-slate-700 mb-4">Danh sách bài viết ({articles.length})</h4>
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                        {articles.map(art => (
+                            <div key={art.id} className="flex items-center justify-between p-3 border border-slate-100 rounded-xl hover:bg-slate-50">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <img src={art.image || "https://placehold.co/100"} className="w-10 h-10 rounded-lg object-cover shrink-0"/>
+                                    <div className="truncate">
+                                        <div className="font-bold text-sm text-slate-900 truncate">{art.title}</div>
+                                        <div className="text-xs text-slate-500">{art.category}</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                    <button onClick={() => handleEditArticle(art)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Sửa"><Edit3 size={16}/></button>
+                                    <button onClick={() => handleDeleteArticle(art.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Xóa"><Trash2 size={16}/></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="lg:col-span-1 space-y-8">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:sticky lg:top-24">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100"><PlusCircle className="text-amber-500"/> {editingProdId ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm'}</h3>
+                    <form onSubmit={handleSubmitProduct} className="space-y-4">
+                        <input required value={prodName} onChange={e => setProdName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-amber-500" placeholder="Tên sản phẩm..." />
+                        <div className="flex gap-2">
+                            <input required type="number" value={prodPrice} onChange={e => setProdPrice(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-amber-500" placeholder="Giá VNĐ" />
+                            <select value={prodType} onChange={e => setProdType(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-amber-500">
+                                <option value="mod">Mod</option><option value="game">Game</option>
+                            </select>
+                        </div>
+                        <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-amber-500 h-20 resize-none" placeholder="Mô tả..." />
+                        <div className="flex gap-2">
+                            {editingProdId && <button type="button" onClick={() => {setEditingProdId(null); setProdName(''); setProdPrice(''); setProdDesc('')}} className="px-4 py-2 bg-slate-200 rounded-lg text-sm font-bold">Hủy</button>}
+                            <button type="submit" className="flex-1 bg-slate-900 text-white py-2 rounded-lg text-sm font-bold hover:bg-amber-600">{editingProdId ? 'Cập Nhật' : 'Thêm Mới'}</button>
+                        </div>
+                    </form>
+                    {message && <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{message}</div>}
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 className="font-bold text-slate-700 mb-4">Danh sách sản phẩm ({products.length})</h4>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                        {products.map(prod => (
+                            <div key={prod.id} className="flex items-center justify-between p-3 border border-slate-100 rounded-xl hover:bg-slate-50">
+                                <div className="truncate pr-2">
+                                    <div className="font-bold text-sm text-slate-900 truncate">{prod.name}</div>
+                                    <div className="text-xs text-amber-600 font-bold">{parseInt(prod.price).toLocaleString()} đ</div>
+                                </div>
+                                <div className="flex gap-1 shrink-0">
+                                    <button onClick={() => handleEditProduct(prod)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Sửa"><Edit3 size={14}/></button>
+                                    <button onClick={() => handleDeleteProduct(prod.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Xóa"><Trash2 size={14}/></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Listen for unread messages for Admin
   useEffect(() => {
     if (user?.email !== ADMIN_EMAIL) return;
-    const q = query(collection(db, COLLECTIONS.CHATS), where('unreadAdmin', '==', true));
-    const unsubscribe = onSnapshot(q, (snap) => {
-        setUnreadCount(snap.size);
-    });
-    return () => unsubscribe();
+    const q = query(getCollRef(COLLECTIONS.CHATS), where('unreadAdmin', '==', true));
+    return onSnapshot(q, (snap) => setUnreadCount(snap.size));
   }, [user]);
 
   const navItems = [
@@ -768,7 +991,6 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
     <nav className="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 transition-all duration-300 shadow-sm">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
           <div className="flex items-center cursor-pointer group" onClick={() => { setView('home'); setCategoryFilter(null); }}>
             <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 p-2 rounded-full mr-3 group-hover:rotate-12 transition-transform duration-300 shadow-md shadow-amber-200">
                 <Gamepad2 className="text-white w-5 h-5 md:w-6 md:h-6" />
@@ -779,7 +1001,6 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
             </div>
           </div>
           
-          {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-2">
             {navItems.map(item => (
               <button
@@ -798,22 +1019,26 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
               )}
           </div>
 
-          {/* Desktop User Info */}
           <div className="hidden lg:flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-                <div className="text-right hidden xl:block">
+                <div className="text-right hidden xl:block cursor-pointer" onClick={() => setView('profile')}>
                    <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Xin chào</div>
-                   <div className="text-sm font-serif font-bold text-slate-900 max-w-[100px] truncate">{getUserDisplayName(user)}</div>
+                   <div className="text-sm font-serif font-bold text-slate-900 max-w-[100px] truncate hover:text-amber-600 transition">{getUserDisplayName(user)}</div>
                 </div>
-                <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition" title="Đăng xuất"><LogOut size={20}/></button>
+                <div className="relative group">
+                    <button className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"><User size={20}/></button>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 hidden group-hover:block animate-in fade-in slide-in-from-top-2">
+                        <button onClick={() => setView('profile')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 rounded-t-xl">Cài đặt tài khoản</button>
+                        <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-b-xl">Đăng xuất</button>
+                    </div>
+                </div>
               </div>
             ) : (
               <button onClick={() => setView('login')} className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-slate-200 transition-all transform hover:-translate-y-0.5">Đăng nhập</button>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="-mr-2 flex lg:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="text-slate-500 hover:text-slate-900 p-2 rounded-md hover:bg-slate-50 transition">
               {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -822,18 +1047,16 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       {isOpen && (
         <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full z-50 shadow-xl animate-in slide-in-from-top-5 max-h-[90vh] overflow-y-auto">
           <div className="px-4 pt-2 pb-6 space-y-2">
-            {/* User Info in Mobile Menu */}
             {user && (
-                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl mb-4 border border-slate-100">
-                    <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-bold">
-                        {getUserDisplayName(user).charAt(0).toUpperCase()}
+                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl mb-4 border border-slate-100" onClick={() => {setView('profile'); setIsOpen(false)}}>
+                    <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-bold overflow-hidden">
+                        {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover"/> : getUserDisplayName(user).charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 overflow-hidden">
-                        <div className="text-xs text-slate-400 uppercase font-bold">Đang online</div>
+                        <div className="text-xs text-slate-400 uppercase font-bold">Cài đặt tài khoản</div>
                         <div className="text-sm font-serif font-bold text-slate-900 truncate">{getUserDisplayName(user)}</div>
                     </div>
                 </div>
@@ -872,7 +1095,6 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
   );
 };
 
-// 4. Article Card (Responsive)
 const ArticleCard = ({ article, onClick }) => (
   <div onClick={() => onClick(article)} className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-amber-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-amber-50/50 flex flex-col h-full">
     <div className="h-48 md:h-56 lg:h-60 overflow-hidden relative">
@@ -897,8 +1119,7 @@ const ArticleCard = ({ article, onClick }) => (
   </div>
 );
 
-// 5. Store Component (Full Width Layout)
-const Store = ({ user, isDemo, setView }) => { // Added setView prop
+const Store = ({ user, isDemo, setView }) => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [storeLoading, setStoreLoading] = useState(false); 
@@ -929,7 +1150,7 @@ const Store = ({ user, isDemo, setView }) => { // Added setView prop
             product={selectedProduct} 
             user={user} 
             onClose={() => setSelectedProduct(null)}
-            onSuccess={() => setView('guide')} // Go to Guide on success
+            onSuccess={() => setView('guide')} 
         />
       )}
 
@@ -947,7 +1168,6 @@ const Store = ({ user, isDemo, setView }) => { // Added setView prop
             {products.map(product => (
             <div key={product.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-amber-300 transition-all duration-500 group hover:-translate-y-2 shadow-sm hover:shadow-2xl hover:shadow-amber-100/50 flex flex-col">
                 <div className="h-48 md:h-56 p-6 md:p-8 bg-slate-50 flex items-center justify-center relative group-hover:bg-white transition-colors">
-                    {/* Product Image Placeholder */}
                     <div className="absolute inset-0 border-b border-slate-100"></div>
                     {product.image && product.image.startsWith('http') ? (
                         <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-500 z-10" onError={(e) => {e.target.onerror=null; e.target.src='https://placehold.co/200x200?text=Product'}} />
@@ -976,243 +1196,6 @@ const Store = ({ user, isDemo, setView }) => { // Added setView prop
   );
 };
 
-// 6. Admin Dashboard (Full Width Support)
-const AdminDashboard = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('articles'); // articles, products, chat
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState(CATEGORIES.NEWS);
-  const [image, setImage] = useState('');
-  const [content, setContent] = useState('');
-  const [message, setMessage] = useState('');
-
-  // Product states
-  const [prodName, setProdName] = useState('');
-  const [prodPrice, setProdPrice] = useState('');
-  const [prodType, setProdType] = useState('mod');
-  const [prodDesc, setProdDesc] = useState('');
-
-  const handleCreateArticle = async (e) => {
-    e.preventDefault();
-    try {
-      await addDoc(getCollRef(COLLECTIONS.ARTICLES), {
-        title,
-        category,
-        image,
-        content,
-        author: getUserDisplayName(user),
-        authorId: user.uid,
-        createdAt: serverTimestamp()
-      });
-      setMessage('Đã đăng bài lên Blog!');
-      setTitle(''); setContent(''); setImage('');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
-      console.error(err);
-      setMessage('Lỗi khi đăng bài.');
-    }
-  };
-
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    try {
-      await addDoc(getCollRef(COLLECTIONS.PRODUCTS), {
-        name: prodName,
-        price: Number(prodPrice),
-        type: prodType,
-        description: prodDesc || "Sản phẩm FM Blog",
-        createdAt: serverTimestamp()
-      });
-      setProdName(''); setProdPrice(''); setProdDesc('');
-      setMessage('Đã thêm sản phẩm!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
-       setMessage('Lỗi khi thêm sản phẩm');
-    }
-  }
-
-  return (
-    <div className="max-w-[1600px] mx-auto py-8 md:py-12 px-4 lg:px-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900">Quản Trị Blog</h1>
-        <div className="flex gap-2 flex-wrap">
-            <button onClick={() => setActiveTab('articles')} className={`px-4 py-2 rounded-full text-sm font-bold transition ${activeTab === 'articles' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Bài viết & Sản phẩm</button>
-            <button onClick={() => setActiveTab('chat')} className={`px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 ${activeTab === 'chat' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                <MessageSquare size={16}/> Hỗ trợ trực tuyến
-            </button>
-        </div>
-      </div>
-
-      {activeTab === 'chat' ? (
-          <AdminChatPanel />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
-            {/* Left: Article Form */}
-            <div className="lg:col-span-2 order-2 lg:order-1">
-            <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100"><Edit3 className="text-amber-500"/> Viết Bài Mới</h3>
-                <form onSubmit={handleCreateArticle} className="space-y-5 md:space-y-6">
-                    <div>
-                    <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Tiêu đề</label>
-                    <input required value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition font-serif text-base md:text-lg placeholder:text-slate-300" placeholder="Tiêu đề bài viết..." />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-                    <div>
-                        <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Chuyên mục</label>
-                        <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 outline-none focus:border-amber-500">
-                        {Object.values(CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Ảnh Cover (URL)</label>
-                        <input value={image} onChange={e => setImage(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 outline-none focus:border-amber-500 placeholder:text-slate-300" placeholder="https://..." />
-                    </div>
-                    </div>
-                    <div>
-                    <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Nội dung</label>
-                    <RichTextEditor value={content} onChange={setContent} />
-                    </div>
-                    <button type="submit" className="w-full bg-slate-900 hover:bg-amber-600 text-white py-3 md:py-4 rounded-xl font-bold shadow-lg shadow-slate-200 transition-all active:scale-95">Xuất Bản Bài Viết</button>
-                </form>
-            </div>
-            </div>
-
-            {/* Right: Product Form */}
-            <div className="order-1 lg:order-2">
-            <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm lg:sticky lg:top-24">
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100"><PlusCircle className="text-amber-500"/> Thêm Sản Phẩm</h3>
-                <form onSubmit={handleAddProduct} className="space-y-4 md:space-y-5">
-                    <div>
-                    <label className="block text-slate-500 text-xs font-bold uppercase mb-1">Tên sản phẩm</label>
-                    <input required value={prodName} onChange={e => setProdName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm outline-none focus:border-amber-500" placeholder="Tên sản phẩm..." />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="block text-slate-500 text-xs font-bold uppercase mb-1">Giá (VNĐ)</label>
-                        <input required type="number" value={prodPrice} onChange={e => setProdPrice(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm outline-none focus:border-amber-500" placeholder="100000" />
-                    </div>
-                    <div>
-                        <label className="block text-slate-500 text-xs font-bold uppercase mb-1">Loại</label>
-                        <select value={prodType} onChange={e => setProdType(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm outline-none focus:border-amber-500">
-                            <option value="mod">Mod/Data</option>
-                            <option value="game">Game Key</option>
-                        </select>
-                    </div>
-                    </div>
-                    <div>
-                    <label className="block text-slate-500 text-xs font-bold uppercase mb-1">Mô tả ngắn</label>
-                    <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm outline-none focus:border-amber-500 h-24 resize-none" placeholder="Mô tả..." />
-                    </div>
-                    <button type="submit" className="w-full bg-white border border-slate-200 hover:border-amber-500 text-slate-900 hover:text-amber-600 py-3 rounded-xl font-bold transition-all active:scale-95">Lưu Vào Kho</button>
-                </form>
-
-                {message && (
-                    <div className="mt-4 p-3 bg-green-50 border border-green-100 text-green-700 rounded-lg flex items-center gap-2 text-sm">
-                        <CheckCircle size={16} /> {message}
-                    </div>
-                )}
-            </div>
-            </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// 7. Article Detail (Responsive - Centered Reading)
-const ArticleDetail = ({ article, onBack, user }) => {
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-
-  useEffect(() => {
-    if (!article?.id || !user) return;
-    const q = query(getCollRef(COLLECTIONS.COMMENTS), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const allComments = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setComments(allComments.filter(c => c.articleId === article.id));
-    }, () => {}); 
-    return () => unsubscribe();
-  }, [article, user]);
-
-  const handlePostComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    try {
-      const userName = getUserDisplayName(user);
-      await addDoc(getCollRef(COLLECTIONS.COMMENTS), {
-        articleId: article.id, text: newComment, userId: user.uid,
-        userName: userName, createdAt: serverTimestamp()
-      });
-      setNewComment('');
-    } catch (error) { alert("Vui lòng đăng nhập để bình luận."); }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto py-8 md:py-12 px-4 animate-in fade-in duration-700">
-      <button onClick={onBack} className="mb-6 md:mb-8 px-4 md:px-5 py-2 rounded-full border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-900 transition flex items-center gap-2 text-sm font-bold group">
-          &larr; Quay lại <span className="hidden sm:inline group-hover:translate-x-1 transition-transform">Trang chủ</span>
-      </button>
-      
-      <article className="mb-10 md:mb-16">
-        <div className="text-center mb-8 md:mb-10">
-            <span className="text-amber-600 font-bold tracking-widest text-[10px] md:text-xs uppercase mb-3 md:mb-4 block">{article.category}</span>
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-bold text-slate-900 leading-tight mb-4 md:mb-6">{article.title}</h1>
-            <div className="flex items-center justify-center gap-4 text-slate-400 text-xs md:text-sm">
-                 <span className="font-medium text-slate-600">Bởi {article.author || 'Admin'}</span>
-                 <span>&bull;</span>
-                 <span>{new Date(article.createdAt?.seconds * 1000).toLocaleDateString('vi-VN')}</span>
-            </div>
-        </div>
-
-        <div className="rounded-xl md:rounded-2xl overflow-hidden shadow-xl shadow-slate-200 mb-8 md:mb-12">
-           <img src={article.image || "https://placehold.co/800x400"} alt={article.title} className="w-full h-auto object-cover" />
-        </div>
-        
-        <div className="prose prose-base md:prose-lg prose-slate max-w-none prose-headings:font-serif prose-a:text-amber-600 prose-img:rounded-xl text-slate-600 leading-relaxed px-1" dangerouslySetInnerHTML={{ __html: article.content }} />
-      </article>
-
-      <div className="border-t border-slate-100 pt-8 md:pt-12">
-        <h3 className="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-6 md:mb-8">Thảo luận ({comments.length})</h3>
-        
-        {user ? (
-          <form onSubmit={handlePostComment} className="mb-8 md:mb-12">
-            <textarea
-              value={newComment} onChange={(e) => setNewComment(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:bg-white focus:ring-1 focus:ring-amber-500 outline-none transition min-h-[100px] md:min-h-[120px] resize-none placeholder:text-slate-400"
-              placeholder="Chia sẻ suy nghĩ của bạn..."
-            />
-            <div className="flex justify-end mt-3">
-                <button type="submit" className="bg-slate-900 hover:bg-amber-600 text-white px-5 md:px-6 py-2 rounded-full font-bold text-sm transition active:scale-95">Gửi bình luận</button>
-            </div>
-          </form>
-        ) : (
-          <div className="bg-slate-50 p-6 md:p-8 rounded-2xl text-center mb-8 md:mb-12 border border-slate-100">
-            <p className="text-slate-500 mb-4 text-sm md:text-base">Bạn cần đăng nhập để tham gia thảo luận.</p>
-            <button className="text-amber-600 font-bold underline">Đăng nhập ngay</button>
-          </div>
-        )}
-
-        <div className="space-y-6 md:space-y-8">
-          {comments.map(comment => (
-            <div key={comment.id} className="flex gap-3 md:gap-4">
-               <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-serif font-bold border border-slate-200 shrink-0 text-sm md:text-base">
-                  {comment.userName.charAt(0).toUpperCase()}
-               </div>
-               <div className="flex-1">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="font-bold text-slate-900 text-sm md:text-base">{comment.userName}</span>
-                    <span className="text-[10px] md:text-xs text-slate-400">{comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('vi-VN') : 'Vừa xong'}</span>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed text-sm md:text-base">{comment.text}</p>
-               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 7. Auth Modal (Responsive)
 const AuthModal = ({ setView, onLoginSuccess }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -1271,23 +1254,19 @@ const AuthModal = ({ setView, onLoginSuccess }) => {
   );
 };
 
-// --- Main App ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('home'); 
   const [categoryFilter, setCategoryFilter] = useState(null); 
   const [activeArticle, setActiveArticle] = useState(null);
   const [articles, setArticles] = useState([]);
+  const [products, setProducts] = useState([]); // Pass products to admin
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false); 
 
   useEffect(() => {
     const initAuth = async () => {
-        try {
-            await signInAnonymously(auth);
-        } catch (err) {
-            console.warn("Anonymous auth failed", err);
-        }
+        try { await signInAnonymously(auth); } catch (err) { console.warn("Anonymous auth failed", err); }
     };
     initAuth();
     return onAuthStateChanged(auth, setUser);
@@ -1297,13 +1276,14 @@ export default function App() {
     const timer = setTimeout(() => {
         if (loading) {
             setArticles(MOCK_ARTICLES);
+            setProducts(MOCK_PRODUCTS);
             setLoading(false);
             setIsDemo(true);
         }
     }, 4000);
 
-    const q = query(getCollRef(COLLECTIONS.ARTICLES), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const qArt = query(getCollRef(COLLECTIONS.ARTICLES), orderBy('createdAt', 'desc'));
+    const unsubArt = onSnapshot(qArt, (snapshot) => {
       setArticles(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
       setIsDemo(false);
@@ -1314,9 +1294,16 @@ export default function App() {
         setIsDemo(true);
         clearTimeout(timer);
     });
+
+    // Also fetch products for Admin dashboard usage
+    const qProd = query(getCollRef(COLLECTIONS.PRODUCTS));
+    const unsubProd = onSnapshot(qProd, (snapshot) => {
+        setProducts(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => setProducts(MOCK_PRODUCTS));
     
     return () => {
-        unsubscribe();
+        unsubArt();
+        unsubProd();
         clearTimeout(timer);
     }
   }, [user]);
@@ -1406,7 +1393,8 @@ export default function App() {
         {view === 'article' && activeArticle && <ArticleDetail article={activeArticle} onBack={() => setView('home')} user={user} />}
         {view === 'store' && <Store user={user} isDemo={isDemo} setView={setView} />}
         {view === 'guide' && <ProductGuide onBack={() => setView('home')} />}
-        {view === 'admin' && (user?.email === ADMIN_EMAIL ? <AdminDashboard user={user} /> : <div className="flex items-center justify-center h-[60vh] text-slate-400 px-4 text-center">Bạn cần quyền Admin ({ADMIN_EMAIL}) để truy cập.</div>)}
+        {view === 'profile' && <ProfilePage user={user} onBack={() => setView('home')} />}
+        {view === 'admin' && (user?.email === ADMIN_EMAIL ? <AdminDashboard user={user} articles={articles} products={products} /> : <div className="flex items-center justify-center h-[60vh] text-slate-400 px-4 text-center">Bạn cần quyền Admin ({ADMIN_EMAIL}) để truy cập.</div>)}
         {view === 'login' && <AuthModal setView={setView} onLoginSuccess={() => setView('home')} />}
       </main>
       
