@@ -52,10 +52,8 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify,
   Heading1,
   Heading2,
-  Heading3,
   Undo,
   Redo,
   CheckCircle,
@@ -91,22 +89,24 @@ import {
   Eraser,
   Type,
   Highlighter,
-  Palette
+  Palette,
+  Facebook,
+  Phone
 } from 'lucide-react';
 
-// --- Firebase Setup (CHÍNH CHỦ) ---
-const firebaseConfig = {
-  apiKey: "AIzaSyC1Egcu7ByRCb3ruOdRufTmxPq2rnBebEU",
-  authDomain: "fmpro-c5f67.firebaseapp.com",
-  projectId: "fmpro-c5f67",
-  storageBucket: "fmpro-c5f67.firebasestorage.app",
-  messagingSenderId: "548693405398",
-  appId: "1:548693405398:web:67883c3c3972062d162377",
-  measurementId: "G-L87XVT5DMZ"
-};
+// --- Firebase Setup ---
+const firebaseConfig = typeof __firebase_config !== 'undefined'
+  ? JSON.parse(__firebase_config)
+  : {
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_AUTH_DOMAIN_HERE",
+    projectId: "YOUR_PROJECT_ID_HERE",
+    storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+    appId: "YOUR_APP_ID_HERE"
+  };
 
 const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app); 
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -121,7 +121,7 @@ const COLLECTIONS = {
 };
 
 const CATEGORIES = {
-  NEWS: 'Góc nhìn & Blog',
+  NEWS: 'News', // Đổi tên thành News theo yêu cầu
   REVIEW: 'Review Cầu Thủ',
   DOWNLOAD: 'Kho Tài Nguyên',
   TIPS: 'Chiến Thuật & Tips'
@@ -131,10 +131,10 @@ const CATEGORIES = {
 const MOCK_ARTICLES = [
   {
     id: 'mock-1',
-    title: 'Hành trình đưa Wrexham lên đỉnh Premier League: Phần 1',
-    category: 'Góc nhìn & Blog',
-    image: 'https://placehold.co/600x400/f8fafc/d97706?text=Wrexham+Story',
-    content: '<p>Hôm nay mình bắt đầu save game mới với Wrexham...</p>',
+    title: 'Tin nóng: FM26 sẽ có tính năng AI mới?',
+    category: 'News',
+    image: 'https://placehold.co/600x400/f8fafc/d97706?text=FM26+News',
+    content: '<p>Những rò rỉ mới nhất về phiên bản tiếp theo...</p>',
     author: 'Admin',
     createdAt: { seconds: Date.now() / 1000 }
   },
@@ -160,7 +160,13 @@ const MOCK_PRODUCTS = [
   }
 ];
 
-const getCollRef = (colName) => collection(db, colName);
+const getCollRef = (colName) => {
+  const prefix = typeof __app_id !== 'undefined' ? `artifacts/${__app_id}/public/data/` : '';
+  if (prefix) {
+    return collection(db, 'artifacts', __app_id, 'public', 'data', colName);
+  }
+  return collection(db, colName);
+}
 
 const getUserDisplayName = (user) => {
   if (!user) return 'Khách';
@@ -169,7 +175,6 @@ const getUserDisplayName = (user) => {
   return 'Bạn đọc';
 };
 
-// Helper để format ngày an toàn, tránh lỗi crash
 const formatDateSafe = (timestamp) => {
   if (!timestamp || !timestamp.seconds) return 'Vừa xong';
   try {
@@ -206,6 +211,45 @@ const DemoModeAlert = () => (
   </div>
 );
 
+// PAGE: Contact Page (New)
+const ContactPage = () => (
+  <div className="max-w-4xl mx-auto py-16 px-4 animate-in fade-in duration-500">
+    <div className="text-center mb-12">
+      <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Về Chúng Tôi</h2>
+      <div className="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
+    </div>
+
+    <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+      <div className="md:w-1/2 p-8 md:p-12 bg-slate-50 flex flex-col justify-center">
+        <h3 className="text-2xl font-serif font-bold text-slate-800 mb-4">Chúng tôi là ai?</h3>
+        <p className="text-slate-600 leading-relaxed mb-6">
+          FM PRO BLOG là điểm đến tin cậy cho cộng đồng Football Manager tại Việt Nam. Chúng tôi cung cấp các giải pháp chơi game bản quyền giá rẻ, chia sẻ kiến thức, chiến thuật và các bản mod chất lượng cao.
+        </p>
+        <p className="text-slate-600 leading-relaxed">
+          Với đội ngũ admin nhiệt huyết và giàu kinh nghiệm, chúng tôi cam kết mang lại trải nghiệm tốt nhất cho các HLV online.
+        </p>
+      </div>
+      <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center bg-gradient-to-br from-slate-900 to-slate-800 text-white text-center">
+        <div className="bg-white/10 p-4 rounded-full mb-6">
+          <Mail size={32} className="text-amber-400" />
+        </div>
+        <h3 className="text-2xl font-bold mb-2">Liên Hệ Hỗ Trợ</h3>
+        <p className="text-slate-400 mb-8 text-sm">Gặp vấn đề? Inbox ngay cho Admin.</p>
+
+        <a
+          href="https://www.facebook.com/tanlan.2001"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-900/50"
+        >
+          <Facebook size={20} /> Chat qua Facebook
+        </a>
+      </div>
+    </div>
+  </div>
+);
+
+// PAGE: Product Guide (Updated Content)
 const ProductGuide = ({ onBack }) => (
   <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-500">
     <div className="bg-white border border-amber-200 rounded-3xl shadow-2xl overflow-hidden">
@@ -220,18 +264,25 @@ const ProductGuide = ({ onBack }) => (
       </div>
 
       <div className="p-6 md:p-10 space-y-8 text-slate-700">
+        {/* Section 1 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
             Về gói Share
           </h3>
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4 text-blue-800 font-medium">
+            👉 Khi thanh toán xong, hãy nhắn tin cho <strong>ADMIN</strong> bằng cách chat trong web hoặc liên hệ FB ở mục "Liên hệ".
+          </div>
           <ul className="list-disc pl-5 space-y-2 text-sm md:text-base leading-relaxed">
             <li>Bạn sẽ nhận được một <strong>Tài khoản Steam có sẵn Football Manager 2026 PC</strong>.</li>
             <li>Đây là hình thức <strong>Share Steam Offline</strong> (chơi ở chế độ ngoại tuyến).</li>
             <li>File save game được lưu riêng trên máy tính của bạn, hoàn toàn bảo mật.</li>
             <li className="text-red-600 font-bold bg-red-50 p-2 rounded-lg">Tuyệt đối không thay đổi email hay mật khẩu của tài khoản được cấp.</li>
+            <li className="italic text-slate-500">Lưu ý: Gói này không hỗ trợ chơi tại tiệm nét hoặc qua các dịch vụ Cloud PC.</li>
           </ul>
         </section>
+
+        {/* Section 2 */}
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
@@ -239,7 +290,60 @@ const ProductGuide = ({ onBack }) => (
           </h3>
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm md:text-base">
             <p className="flex items-start gap-2"><AlertTriangle className="text-amber-500 shrink-0 mt-1" size={18} /> <strong>KHÔNG nhấn "Go Online"</strong> hoặc thay đổi nick khác trên Steam.</p>
-            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>.</p>
+            <p>Khi Steam Client hiện thông báo yêu cầu "Update / Cancel", hãy nhấn <strong>CANCEL</strong>. (Nếu bật Steam thấy chữ "Installing..." thì cứ để bình thường).</p>
+            <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
+          </div>
+        </section>
+
+        {/* Section 3 */}
+        <section>
+          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+            Khi Steam yêu cầu "Go Online" để chơi tiếp
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="border border-slate-200 p-4 rounded-xl">
+              <h4 className="font-bold mb-2 text-slate-900">Bước 1:</h4>
+              <p className="text-sm text-slate-600">Vui lòng tự kiểm tra và Update Windows, driver card màn hình và các driver khác trong máy tính của bạn lên bản mới nhất.</p>
+            </div>
+            <div className="border border-slate-200 p-4 rounded-xl">
+              <h4 className="font-bold mb-2 text-slate-900">Bước 2:</h4>
+              <p className="text-sm text-slate-600">Hãy <strong>Inbox cho Admin</strong> để được hỗ trợ sửa lỗi.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4 */}
+        <section>
+          <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
+            <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
+            Một vài lưu ý khác
+          </h3>
+          <div className="space-y-4 text-sm md:text-base">
+            <div>
+              <strong className="block text-slate-900 mb-1">Bạn đã có nick Steam khác?</strong>
+              <p>Bạn vẫn share offline được, nhưng cần tuân thủ đúng các bước hướng dẫn. Page sẵn sàng hỗ trợ nếu bị văng nick hoặc lỗi "Go Online", nhưng sẽ <strong>hạn chế hỗ trợ</strong> nếu bạn tự ý đổi nick qua lại để chơi game khác.</p>
+            </div>
+            <div>
+              <strong className="block text-slate-900 mb-1 flex items-center gap-2"><Info size={16} /> Phạm vi hỗ trợ:</strong>
+              <p>Page chỉ hỗ trợ các vấn đề liên quan đến cài đặt và kích hoạt game. Các vấn đề về gameplay, chiến thuật... vui lòng tham gia group cộng đồng: <a href="https://www.facebook.com/groups/fmvnofficial" target="_blank" rel="noreferrer" className="text-blue-600 underline">FMVN Official</a></p>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
+              <div className="flex-1 bg-amber-50 p-3 rounded-lg flex gap-3 items-start">
+                <Clock className="text-amber-600 shrink-0" size={20} />
+                <div>
+                  <strong className="block text-amber-800 text-sm">Giờ hỗ trợ</strong>
+                  <p className="text-xs text-amber-700 mt-1">Tránh nhắn tin sau 11h đêm.</p>
+                </div>
+              </div>
+              <div className="flex-1 bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
+                <Clock className="text-blue-600 shrink-0" size={20} />
+                <div>
+                  <strong className="block text-blue-800 text-sm">Thời gian chờ</strong>
+                  <p className="text-xs text-blue-700 mt-1">Nếu quá tải, vui lòng đợi 12 - 48 giờ.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -1020,7 +1124,6 @@ const AdminDashboard = ({ user, articles, products }) => {
   );
 };
 
-// --- Existing Navbar, ArticleCard, etc. (Keeping logic) ---
 const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -1033,16 +1136,20 @@ const Navbar = ({ user, setView, currentView, setCategoryFilter, currentFilter, 
 
   const navItems = [
     { id: 'home', label: 'Trang Chủ', icon: <BookOpen size={18} />, action: () => { setView('home'); setCategoryFilter(null); } },
+    { id: 'news', label: 'News', icon: <BookOpen size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.NEWS); } }, // Use CATEGORIES.NEWS
     { id: 'review', label: 'Review', icon: <User size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.REVIEW); } },
     { id: 'download', label: 'Download', icon: <Download size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.DOWNLOAD); } },
     { id: 'tips', label: 'Tips', icon: <Zap size={18} />, action: () => { setView('home'); setCategoryFilter(CATEGORIES.TIPS); } },
     { id: 'store', label: 'Cửa Hàng', icon: <ShoppingCart size={18} />, action: () => { setView('store'); } },
+    { id: 'contact', label: 'Liên Hệ', icon: <Phone size={18} />, action: () => { setView('contact'); } }, // New Contact Tab
   ];
 
   const isActive = (item) => {
     if (item.id === 'store' && currentView === 'store') return true;
+    if (item.id === 'contact' && currentView === 'contact') return true;
     if (currentView === 'home') {
       if (item.id === 'home' && !currentFilter) return true;
+      if (item.id === 'news' && currentFilter === CATEGORIES.NEWS) return true;
       if (item.id === 'review' && currentFilter === CATEGORIES.REVIEW) return true;
       if (item.id === 'download' && currentFilter === CATEGORIES.DOWNLOAD) return true;
       if (item.id === 'tips' && currentFilter === CATEGORIES.TIPS) return true;
@@ -1182,135 +1289,93 @@ const ArticleCard = ({ article, onClick }) => (
   </div>
 );
 
-const Store = ({ user, isDemo, setView }) => {
-  const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [storeLoading, setStoreLoading] = useState(false);
+const ArticleDetail = ({ article, onBack, user }) => {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
-    setStoreLoading(true);
-    if (isDemo) { setProducts(MOCK_PRODUCTS); setStoreLoading(false); return; }
-
-    const q = query(getCollRef(COLLECTIONS.PRODUCTS));
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
-      const prods = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setProducts(prods);
-      setStoreLoading(false);
-      if (prods.length === 0 && user && user.uid) {
-        // Seeding logic omitted
-      }
-    }, (err) => {
-      setProducts(MOCK_PRODUCTS);
-      setStoreLoading(false);
-    });
+    if (!article?.id || !user) return;
+    const q = query(getCollRef(COLLECTIONS.COMMENTS), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allComments = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setComments(allComments.filter(c => c.articleId === article.id));
+    }, () => { });
     return () => unsubscribe();
-  }, [user, isDemo]);
+  }, [article, user]);
 
-  return (
-    <div className="max-w-[1800px] mx-auto py-10 md:py-16 px-6 lg:px-10">
-      {selectedProduct && (
-        <PaymentModal
-          product={selectedProduct}
-          user={user}
-          onClose={() => setSelectedProduct(null)}
-          onSuccess={() => setView('guide')}
-        />
-      )}
-
-      <div className="text-center mb-12 md:mb-20 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-amber-100 blur-[60px] rounded-full -z-10 opacity-50"></div>
-        <span className="text-amber-600 font-bold tracking-[0.3em] text-xs uppercase mb-3 block">Premium Store</span>
-        <h2 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 mb-4 md:mb-6">Cửa Hàng Độc Quyền</h2>
-        <p className="text-slate-500 max-w-xl mx-auto text-base md:text-lg font-light px-2">Nâng cấp trải nghiệm quản lý bóng đá của bạn với các công cụ và dữ liệu được chọn lọc kỹ càng.</p>
-      </div>
-
-      {storeLoading ? (
-        <div className="text-center text-amber-500 font-serif italic">Đang tải bộ sưu tập...</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {products.map(product => (
-            <div key={product.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-amber-300 transition-all duration-500 group hover:-translate-y-2 shadow-sm hover:shadow-2xl hover:shadow-amber-100/50 flex flex-col">
-              <div className="h-48 md:h-56 p-6 md:p-8 bg-slate-50 flex items-center justify-center relative group-hover:bg-white transition-colors">
-                <div className="absolute inset-0 border-b border-slate-100"></div>
-                {product.image && product.image.startsWith('http') ? (
-                  <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-500 z-10" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Product' }} />
-                ) : (
-                  <Crown className="text-amber-400 w-16 h-16 md:w-20 md:h-20 group-hover:text-amber-500 transition-colors z-10" />
-                )}
-                <div className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider z-20 bg-white shadow-sm border border-slate-100 text-slate-500`}>
-                  {product.type === 'game' ? 'KEY' : 'MOD'}
-                </div>
-              </div>
-              <div className="p-5 md:p-6 flex-1 flex flex-col text-center">
-                <h3 className="text-base md:text-lg font-serif font-bold text-slate-900 mb-2 line-clamp-2">{product.name}</h3>
-                <p className="text-slate-500 text-xs md:text-sm mb-4 md:mb-6 flex-1 line-clamp-2 font-light">{product.description}</p>
-                <div className="mt-auto">
-                  <div className="text-xl md:text-2xl font-bold text-slate-900 mb-3 md:mb-4">{parseInt(product.price).toLocaleString('vi-VN')} <span className="text-sm text-slate-400 font-normal align-top">đ</span></div>
-                  <button onClick={() => setSelectedProduct(product)} className="w-full bg-slate-900 hover:bg-amber-600 text-white py-2.5 md:py-3 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-slate-200 group-hover:shadow-amber-200 flex items-center justify-center gap-2 active:scale-95">
-                    <CreditCard size={16} /> Mua Ngay
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AuthModal = ({ setView, onLoginSuccess }) => {
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault(); setError('');
+  const handlePostComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
     try {
-      let userCred;
-      if (isRegister) {
-        userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCred.user, { displayName: name });
-      } else {
-        userCred = await signInWithEmailAndPassword(auth, email, password);
-      }
-      onLoginSuccess();
-    } catch (err) { setError(err.message); }
+      const userName = getUserDisplayName(user);
+      await addDoc(getCollRef(COLLECTIONS.COMMENTS), {
+        articleId: article.id, text: newComment, userId: user.uid,
+        userName: userName, createdAt: serverTimestamp()
+      });
+      setNewComment('');
+    } catch (error) { alert("Vui lòng đăng nhập để bình luận."); }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] p-4">
-      <div className="bg-white p-6 md:p-10 rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 w-full max-w-md relative">
-        <button onClick={() => setView('home')} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 p-2"><X size={20} /></button>
-        <div className="text-center mb-6 md:mb-8">
-          <div className="inline-block p-3 bg-amber-50 rounded-full mb-4"><User size={28} className="text-amber-600" /></div>
-          <h2 className="text-xl md:text-2xl font-serif font-bold text-slate-900">{isRegister ? 'Đăng Ký Thành Viên' : 'Chào Mừng Trở Lại'}</h2>
-          <p className="text-slate-500 text-xs md:text-sm mt-2">Tham gia cộng đồng FM Blog Việt Nam</p>
+    <div className="max-w-4xl mx-auto py-8 md:py-12 px-4 animate-in fade-in duration-700">
+      <button onClick={onBack} className="mb-6 md:mb-8 px-4 md:px-5 py-2 rounded-full border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-900 transition flex items-center gap-2 text-sm font-bold group">
+        &larr; Quay lại <span className="hidden sm:inline group-hover:translate-x-1 transition-transform">Trang chủ</span>
+      </button>
+
+      <article className="mb-10 md:mb-16">
+        <div className="text-center mb-8 md:mb-10">
+          <span className="text-amber-600 font-bold tracking-widest text-[10px] md:text-xs uppercase mb-3 md:mb-4 block">{article.category}</span>
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-bold text-slate-900 leading-tight mb-4 md:mb-6">{article.title}</h1>
+          <div className="flex items-center justify-center gap-4 text-slate-400 text-xs md:text-sm">
+            <span className="font-medium text-slate-600">Bởi {article.author || 'Admin'}</span>
+            <span>&bull;</span>
+            <span>{formatDateSafe(article.createdAt)}</span>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-          {isRegister && (
-            <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:bg-white focus:border-amber-500 outline-none transition placeholder:text-slate-400" placeholder="Tên hiển thị của bạn" />
-          )}
-          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:bg-white focus:border-amber-500 outline-none transition placeholder:text-slate-400" placeholder="Email" />
-          <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 text-slate-900 focus:bg-white focus:border-amber-500 outline-none transition placeholder:text-slate-400" placeholder="Mật khẩu" />
-
-          {error && <p className="text-red-500 text-xs md:text-sm text-center bg-red-50 p-2 rounded-lg">{error}</p>}
-
-          <button type="submit" className="w-full bg-slate-900 hover:bg-amber-600 text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg transition-all shadow-lg shadow-slate-200 active:scale-95">
-            {isRegister ? 'Tạo Tài Khoản' : 'Đăng Nhập'}
-          </button>
-        </form>
-
-        <div className="mt-6 md:mt-8 text-center">
-          <button onClick={() => setIsRegister(!isRegister)} className="text-slate-500 hover:text-amber-600 text-sm font-medium transition">
-            {isRegister ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký ngay'}
-          </button>
+        <div className="rounded-xl md:rounded-2xl overflow-hidden shadow-xl shadow-slate-200 mb-8 md:mb-12">
+          <img src={article.image || "https://placehold.co/800x400"} alt={article.title} className="w-full h-auto object-cover" />
         </div>
-        <div className="mt-4 pt-4 border-t border-slate-100 text-center">
-          <p className="text-[10px] md:text-xs text-slate-400">Tài khoản Admin Demo: {ADMIN_EMAIL}</p>
+
+        <div className="prose prose-base md:prose-lg prose-slate max-w-none prose-headings:font-serif prose-a:text-amber-600 prose-img:rounded-xl text-slate-600 leading-relaxed px-1" dangerouslySetInnerHTML={{ __html: article.content }} />
+      </article>
+
+      <div className="border-t border-slate-100 pt-8 md:pt-12">
+        <h3 className="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-6 md:mb-8">Thảo luận ({comments.length})</h3>
+
+        {user ? (
+          <form onSubmit={handlePostComment} className="mb-8 md:mb-12">
+            <textarea
+              value={newComment} onChange={(e) => setNewComment(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:bg-white focus:ring-1 focus:ring-amber-500 outline-none transition min-h-[100px] md:min-h-[120px] resize-none placeholder:text-slate-400"
+              placeholder="Chia sẻ suy nghĩ của bạn..."
+            />
+            <div className="flex justify-end mt-3">
+              <button type="submit" className="bg-slate-900 hover:bg-amber-600 text-white px-5 md:px-6 py-2 rounded-full font-bold text-sm transition active:scale-95">Gửi bình luận</button>
+            </div>
+          </form>
+        ) : (
+          <div className="bg-slate-50 p-6 md:p-8 rounded-2xl text-center mb-8 md:mb-12 border border-slate-100">
+            <p className="text-slate-500 mb-4 text-sm md:text-base">Bạn cần đăng nhập để tham gia thảo luận.</p>
+            <button className="text-amber-600 font-bold underline">Đăng nhập ngay</button>
+          </div>
+        )}
+
+        <div className="space-y-6 md:space-y-8">
+          {comments.map(comment => (
+            <div key={comment.id} className="flex gap-3 md:gap-4">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-serif font-bold border border-slate-200 shrink-0 text-sm md:text-base">
+                {comment.userName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-baseline mb-1">
+                  <span className="font-bold text-slate-900 text-sm md:text-base">{comment.userName}</span>
+                  <span className="text-[10px] md:text-xs text-slate-400">{formatDateSafe(comment.createdAt)}</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed text-sm md:text-base">{comment.text}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -1456,6 +1521,7 @@ export default function App() {
         {view === 'article' && activeArticle && <ArticleDetail article={activeArticle} onBack={() => setView('home')} user={user} />}
         {view === 'store' && <Store user={user} isDemo={isDemo} setView={setView} />}
         {view === 'guide' && <ProductGuide onBack={() => setView('home')} />}
+        {view === 'contact' && <ContactPage />}
         {view === 'profile' && <ProfilePage user={user} onBack={() => setView('home')} />}
         {view === 'admin' && (user?.email === ADMIN_EMAIL ? <AdminDashboard user={user} articles={articles} products={products} /> : <div className="flex items-center justify-center h-[60vh] text-slate-400 px-4 text-center">Bạn cần quyền Admin ({ADMIN_EMAIL}) để truy cập.</div>)}
         {view === 'login' && <AuthModal setView={setView} onLoginSuccess={() => setView('home')} />}
