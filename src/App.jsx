@@ -52,6 +52,7 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify, // Đã thêm import thiếu này
   Heading1,
   Heading2,
   Undo,
@@ -94,7 +95,7 @@ import {
   Phone
 } from 'lucide-react';
 
-// --- Firebase Setup (KHÔI PHỤC CẤU HÌNH CỦA BẠN) ---
+// --- Firebase Setup (CHÍNH CHỦ - GIỮ NGUYÊN) ---
 const firebaseConfig = {
   apiKey: "AIzaSyC1Egcu7ByRCb3ruOdRufTmxPq2rnBebEU",
   authDomain: "fmpro-c5f67.firebaseapp.com",
@@ -272,7 +273,6 @@ const ProductGuide = ({ onBack }) => (
             <li className="italic text-slate-500">Lưu ý: Gói này không hỗ trợ chơi tại tiệm nét hoặc qua các dịch vụ Cloud PC.</li>
           </ul>
         </section>
-
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
@@ -284,7 +284,6 @@ const ProductGuide = ({ onBack }) => (
             <p>Khi game có bản vá (patch) mới, vui lòng <strong>Inbox cho Page</strong> để được hỗ trợ cập nhật.</p>
           </div>
         </section>
-
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
@@ -301,7 +300,6 @@ const ProductGuide = ({ onBack }) => (
             </div>
           </div>
         </section>
-
         <section>
           <h3 className="text-xl font-bold text-amber-600 flex items-center gap-2 mb-4">
             <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
@@ -424,7 +422,10 @@ const ChatWidget = ({ user, isDemo }) => {
 
   useEffect(() => {
     if (!chatId || isDemo) return;
-    const chatDocRef = doc(getCollRef(COLLECTIONS.CHATS), chatId);
+
+    const chatsColRef = getCollRef(COLLECTIONS.CHATS);
+    const chatDocRef = doc(chatsColRef, chatId);
+
     const unsubscribe = onSnapshot(chatDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setMessages(docSnap.data().messages || []);
@@ -443,8 +444,14 @@ const ChatWidget = ({ user, isDemo }) => {
     e.preventDefault();
     if (!inputText.trim() || isDemo) return;
 
-    const newMsg = { text: inputText, sender: 'user', timestamp: Date.now() };
-    const chatDocRef = doc(getCollRef(COLLECTIONS.CHATS), chatId);
+    const newMsg = {
+      text: inputText,
+      sender: 'user',
+      timestamp: Date.now()
+    };
+
+    const chatsColRef = getCollRef(COLLECTIONS.CHATS);
+    const chatDocRef = doc(chatsColRef, chatId);
     const currentHour = new Date().getHours();
     const isOfflineHours = currentHour >= 22 || currentHour < 8;
 
@@ -570,17 +577,26 @@ const AdminChatPanel = () => {
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
     if (chat.unreadAdmin) {
-      await updateDoc(doc(getCollRef(COLLECTIONS.CHATS), chat.id), { unreadAdmin: false });
+      const chatsCollection = getCollRef(COLLECTIONS.CHATS);
+      await updateDoc(doc(chatsCollection, chat.id), {
+        unreadAdmin: false
+      });
     }
   };
 
   const handleReply = async (e) => {
     e.preventDefault();
     if (!replyText.trim() || !selectedChat) return;
-    const newMsg = { text: replyText, sender: 'admin', timestamp: Date.now() };
+
+    const newMsg = {
+      text: replyText,
+      sender: 'admin',
+      timestamp: Date.now()
+    };
 
     try {
-      const chatRef = doc(getCollRef(COLLECTIONS.CHATS), selectedChat.id);
+      const chatsCollection = getCollRef(COLLECTIONS.CHATS);
+      const chatRef = doc(chatsCollection, selectedChat.id);
       const updatedMsgs = [...selectedChat.messages, newMsg];
       await updateDoc(chatRef, {
         messages: updatedMsgs,
@@ -817,12 +833,14 @@ const RichTextEditor = ({ value, onChange }) => {
 
 const AdminDashboard = ({ user, articles, products }) => {
   const [activeTab, setActiveTab] = useState('articles');
+
   const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(CATEGORIES.NEWS);
   const [image, setImage] = useState('');
   const [content, setContent] = useState('');
   const [message, setMessage] = useState('');
+
   const [editingProdId, setEditingProdId] = useState(null);
   const [prodName, setProdName] = useState('');
   const [prodPrice, setProdPrice] = useState('');
@@ -903,7 +921,9 @@ const AdminDashboard = ({ user, articles, products }) => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm("Xóa sản phẩm này?")) { await deleteDoc(doc(getCollRef(COLLECTIONS.PRODUCTS), id)); }
+    if (window.confirm("Xóa sản phẩm này?")) {
+      await deleteDoc(doc(getCollRef(COLLECTIONS.PRODUCTS), id));
+    }
   };
 
   return (
@@ -930,6 +950,7 @@ const AdminDashboard = ({ user, articles, products }) => {
                 </h3>
                 {editingId && <button onClick={handleCancelEdit} className="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300">Hủy sửa</button>}
               </div>
+
               <form onSubmit={handleSubmitArticle} className="space-y-5 md:space-y-6">
                 <div>
                   <label className="block text-slate-500 text-xs font-bold uppercase mb-2 tracking-wider">Tiêu đề</label>
@@ -956,6 +977,7 @@ const AdminDashboard = ({ user, articles, products }) => {
                 </button>
               </form>
             </div>
+
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h4 className="font-bold text-slate-700 mb-4">Danh sách bài viết ({articles.length})</h4>
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
@@ -977,6 +999,7 @@ const AdminDashboard = ({ user, articles, products }) => {
               </div>
             </div>
           </div>
+
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:sticky lg:top-24">
               <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100"><PlusCircle className="text-amber-500" /> {editingProdId ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm'}</h3>
@@ -996,6 +1019,7 @@ const AdminDashboard = ({ user, articles, products }) => {
               </form>
               {message && <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{message}</div>}
             </div>
+
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h4 className="font-bold text-slate-700 mb-4">Danh sách sản phẩm ({products.length})</h4>
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
